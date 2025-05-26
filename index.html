@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quem sou eu na Química?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .element {
+      transition: transform 0.2s;
+    }
+    .element:hover {
+      transform: scale(1.05);
+    }
+    .grid-tabela {
+      display: grid;
+      grid-template-columns: repeat(19, minmax(0, 1fr));
+      gap: 0.25rem;
+      min-width: 600px;
+    }
+    @media (max-width: 768px) {
+      .grid-tabela {
+        min-width: 100%;
+        grid-template-columns: repeat(19, minmax(30px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+  <header class="text-center py-6 bg-gradient-to-r from-blue-500 to-green-400 text-white">
+    <h1 class="text-4xl font-bold">Quem sou eu na Química?</h1>
+    <p class="text-lg mt-2">Explore a tabela periódica de forma divertida e ilustrativa!</p>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 overflow-x-auto">
+    <div class="grid-tabela" id="tabela-container"></div>
+
+    <div id="info-panel" class="mt-8 p-4 border-2 rounded hidden bg-blue-50">
+      <h2 id="element-name" class="text-2xl font-bold"></h2>
+      <p><strong>Símbolo:</strong> <span id="element-symbol"></span></p>
+      <p><strong>Número atômico:</strong> <span id="element-number"></span></p>
+      <p><strong>Massa atômica:</strong> <span id="element-mass"></span></p>
+      <p><strong>Aplicação:</strong> <span id="element-application"></span></p>
+    </div>
+
+    <div class="mt-8 p-4 border rounded bg-gray-100">
+      <h3 class="font-bold mb-4 text-lg">Guia de Cores por Grupo:</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-sm">
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-purple-600 mr-2 rounded-sm"></span>Metais alcalinos</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-red-400 mr-2 rounded-sm"></span>Metais alcalino-terrosos</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-orange-400 mr-2 rounded-sm"></span>Metais de transição</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-yellow-600 mr-2 rounded-sm"></span>Outros metais</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-yellow-500 mr-2 rounded-sm"></span>Semimetais</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-green-500 mr-2 rounded-sm"></span>Não-metais</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-blue-500 mr-2 rounded-sm"></span>Gases nobres</div>
+        <div class="flex items-center"><span class="inline-block w-4 h-4 bg-gray-300 mr-2 rounded-sm"></span>Outros</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const nomesEmPortugues = {
+      1: "Hidrogênio", 2: "Hélio", 3: "Lítio", 4: "Berílio", 5: "Boro", 6: "Carbono", 7: "Nitrogênio", 8: "Oxigênio", 9: "Flúor", 10: "Neônio",
+      11: "Sódio", 12: "Magnésio", 13: "Alumínio", 14: "Silício", 15: "Fósforo", 16: "Enxofre", 17: "Cloro", 18: "Argônio",
+      19: "Potássio", 20: "Cálcio", 21: "Escândio", 22: "Titânio", 23: "Vanádio", 24: "Cromo", 25: "Manganês", 26: "Ferro", 27: "Cobalto", 28: "Níquel", 29: "Cobre", 30: "Zinco",
+      31: "Gálio", 32: "Germânio", 33: "Arsênio", 34: "Selênio", 35: "Bromo", 36: "Criptônio", 37: "Rubídio", 38: "Estrôncio", 39: "Ítrio", 40: "Zircônio", 41: "Nióbio", 42: "Molibdênio",
+      43: "Tecnécio", 44: "Rutênio", 45: "Ródio", 46: "Paládio", 47: "Prata", 48: "Cádmio", 49: "Índio", 50: "Estanho", 51: "Antimônio", 52: "Telúrio", 53: "Iodo", 54: "Xenônio",
+      55: "Césio", 56: "Bário", 57: "Lantânio", 58: "Cério", 59: "Praseodímio", 60: "Neodímio", 61: "Promécio", 62: "Samário", 63: "Európio", 64: "Gadolínio", 65: "Térbio", 66: "Disprósio",
+      67: "Hólmio", 68: "Érbio", 69: "Túlio", 70: "Itérbio", 71: "Lutécio", 72: "Háfnio", 73: "Tântalo", 74: "Tungstênio", 75: "Rênio", 76: "Ósmio", 77: "Irídio", 78: "Platina", 79: "Ouro",
+      80: "Mercúrio", 81: "Tálio", 82: "Chumbo", 83: "Bismuto", 84: "Polônio", 85: "Astato", 86: "Radônio", 87: "Frâncio", 88: "Rádio", 89: "Actínio", 90: "Tório", 91: "Protactínio",
+      92: "Urânio", 93: "Neptúnio", 94: "Plutônio", 95: "Amerício", 96: "Cúrio", 97: "Berquélio", 98: "Califórnio", 99: "Einstênio", 100: "Férmio", 101: "Mendelévio", 102: "Nobélio",
+      103: "Laurêncio", 104: "Rutherfórdio", 105: "Dúbnio", 106: "Seabórgio", 107: "Bóhrio", 108: "Hássio", 109: "Meitnério", 110: "Darmstádtio", 111: "Roentgênio", 112: "Copernício",
+      113: "Nihônio", 114: "Fleróvio", 115: "Moscóvio", 116: "Livermório", 117: "Tenessino", 118: "Oganessônio"
+    };
+
+    const aplicacoesEmPortugues = {};
+
+    function showElementInfo(name, number, symbol, mass, application) {
+      document.getElementById('element-name').innerText = name;
+      document.getElementById('element-symbol').innerText = symbol;
+      document.getElementById('element-number').innerText = number;
+      document.getElementById('element-mass').innerText = mass;
+      document.getElementById('element-application').innerText = application;
+      document.getElementById('info-panel').classList.remove('hidden');
+    }
+
+    async function carregarElementos() {
+      const response = await fetch('https://raw.githubusercontent.com/Bowserinator/Periodic-Table-JSON/master/PeriodicTableJSON.json');
+      const data = await response.json();
+      const elementos = data.elements.map(e => {
+        const nome = nomesEmPortugues[e.number] || e.name;
+        const aplicacao = aplicacoesEmPortugues[e.name] || 'Aplicação geral 🧪';
+        return {
+          nome,
+          simbolo: e.symbol,
+          numero: e.number,
+          massa: e.atomic_mass,
+          grupo: e.xpos,
+          periodo: e.ypos,
+          cor: e.category.includes('noble gas') ? 'bg-blue-500'
+               : e.category.includes('alkali metal') ? 'bg-purple-600'
+               : e.category.includes('alkaline earth metal') ? 'bg-red-400'
+               : e.category.includes('transition metal') ? 'bg-orange-400'
+               : e.category.includes('metalloid') ? 'bg-yellow-500'
+               : e.category.includes('diatomic nonmetal') || e.category.includes('nonmetal') ? 'bg-green-500'
+               : e.category.includes('post-transition metal') ? 'bg-yellow-600'
+               : 'bg-gray-300',
+          aplicacao
+        };
+      });
+
+      const tabela = document.getElementById('tabela-container');
+      let html = '<div></div>';
+      html += Array.from({ length: 18 }, (_, i) => `<div class="text-center font-bold">${i + 1}</div>`).join('');
+
+      for (let p = 1; p <= 9; p++) {
+        html += `<div class="text-center font-bold">${p}</div>`;
+        for (let g = 1; g <= 18; g++) {
+          const el = elementos.find(e => e.grupo === g && e.periodo === p);
+          if (el) {
+            html += `
+              <div class="element ${el.cor} text-white text-center p-2 rounded shadow cursor-pointer hover:brightness-110"
+                   onclick="showElementInfo('${el.nome}', ${el.numero}, '${el.simbolo}', ${el.massa}, '${el.aplicacao}')">
+                <div class="text-xs">${el.numero}</div>
+                <div class="text-lg font-bold">${el.simbolo}</div>
+                <div class="text-xs">${el.nome}</div>
+              </div>`;
+          } else {
+            html += '<div></div>';
+          }
+        }
+      }
+      tabela.innerHTML = html;
+    }
+
+    carregarElementos();
+  </script>
+</body>
+</html>
