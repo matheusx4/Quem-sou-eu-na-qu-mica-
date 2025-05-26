@@ -12,8 +12,12 @@
     .element:hover {
       transform: scale(1.05);
     }
-<div class="grid grid-cols-[repeat(auto-fit,minmax(50px,1fr))] gap-1" id="tabela-container"></div>
-
+    .grid-tabela {
+      display: grid;
+      grid-template-columns: repeat(19, minmax(0, 1fr));
+      gap: 0.25rem;
+      min-width: 800px;
+    }
     }
     @media (max-width: 768px) {
       .grid-tabela {
