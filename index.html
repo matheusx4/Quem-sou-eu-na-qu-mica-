@@ -62,14 +62,6 @@
       <div class="grid-tabela" id="tabela-container"></div>
     </div>
     
-  <!-- Botão para gerar pergunta aleatória -->
-  <div class="mt-8 text-center">
-    <button onclick="gerarPergunta()" class="bg-green-500 text-white px-4 py-2 rounded shadow-lg hover:bg-green-600 transition transform hover:scale-105">
-      Sugestão de Pergunta
-    </button>
-    <p id="pergunta-aleatoria" class="mt-4 text-lg text-gray-800 font-semibold"></p>
-  </div>
-    
     <div id="info-panel" class="mt-8 p-4 border-2 rounded hidden bg-blue-50">
       <h2 id="element-name" class="text-2xl font-bold"></h2>
       <p><strong>Símbolo:</strong> <span id="element-symbol"></span></p>
@@ -290,7 +282,18 @@
       }
       tabela.innerHTML = html;
     }
-    const perguntasAleatorias = [
+    carregarElementos();
+  </script>
+  <!-- SUGESTÃO DE PERGUNTA ALEATÓRIA -->
+<section class="text-center mt-12">
+  <button onclick="gerarPergunta()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform duration-300">
+    Sugestão de Pergunta 🤔
+  </button>
+  <p id="pergunta-gerada" class="mt-4 text-lg font-bold text-purple-700"></p>
+</section>
+
+<script>
+  const perguntas = [
       "O elemento é um metal?",
       "O elemento é um ametal?",
       "O elemento é um gás nobre?",
@@ -368,9 +371,13 @@
       "O elemento tem baixa densidade?",
       "O elemento é usado em explosivos ou fogos de artifício?",
       "O elemento é um bom refletor de luz (usado em espelhos, por exemplo)?"
-    ];
-    carregarElementos();
-  </script>
+  ];
+
+  function gerarPergunta() {
+    const index = Math.floor(Math.random() * perguntas.length);
+    document.getElementById("pergunta-gerada").innerText = perguntas[index];
+  }
+</script>
     <footer class="mt-16 py-10 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-2xl relative overflow-hidden animate-fade-up animate-slide-up">
   <!-- Fundo com símbolos/fórmulas químicas animadas -->
   <div class="chemical-bg absolute inset-0 overflow-hidden pointer-events-none">
