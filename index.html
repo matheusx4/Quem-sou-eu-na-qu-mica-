@@ -285,5 +285,91 @@
 
     carregarElementos();
   </script>
+    <footer class="mt-16 py-10 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-2xl relative overflow-hidden animate-fade-up animate-slide-up">
+  <!-- Fundo com símbolos/fórmulas químicas animadas -->
+  <div class="chemical-bg absolute inset-0 overflow-hidden pointer-events-none">
+    <span class="chem-symbol" style="top:10%; left:-50%;">H₂O</span>
+    <span class="chem-symbol" style="top:30%; left:10%;">NaCl</span>
+    <span class="chem-symbol" style="top:50%; left:-30%;">CO₂</span>
+    <span class="chem-symbol" style="top:70%; left:0%;">NH₃</span>
+    <span class="chem-symbol" style="top:20%; left:-50%;">CH₄</span>
+    <span class="chem-symbol" style="top:20%; left:-40%;">C₆H₁₂O₆</span>
+    <span class="chem-symbol" style="top:80%; left:-60%;">HCl</span>
+    <span class="chem-symbol" style="top:90%; left:-30%;">O₂</span>
+  </div>
+
+  <div class="max-w-7xl mx-auto text-center relative z-10">
+  <h2 class="text-white font-extrabold mb-3 leading-tight text-center text-[clamp(1.3rem,4vw,2.5rem)] break-words">
+    Projeto Educativo: Quem Sou Eu na Tabela Periódica?
+  </h2>
+    <p class="mb-4 text-lg">Desenvolvido pelos alunos de Licenciatura em Química - IFCE Campus Aracati 🧪🔬</p>
+    <p class="italic text-sm">Combinando tecnologia, ludicidade e ciência para transformar a aprendizagem! 🚀⚗️</p>
+
+    <div class="mt-6 text-sm leading-relaxed">
+      <p><strong>Autores:</strong></p>
+      <p>Brandon Igor Santos Mota </p>
+      <p>Matheus Monteiro do Vale </p>
+      <p>Werton Vitor Santos Nascimento </p>
+      <p><strong>Professora Orientadora:</strong> Otilia Mônica Alves Borges </p>
+    </div>
+  </div>
+
+  <style>
+    /* Animação das fórmulas químicas no fundo */
+    @keyframes moveBg {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(150%); }
+    }
+    .chemical-bg .chem-symbol {
+      position: absolute;
+      font-size: 3rem;
+      font-weight: bold;
+      color: rgba(255,255,255,0.08);
+      white-space: nowrap;
+      animation: moveBg 15s linear infinite;
+    }
+
+    /* Responsividade no título */
+    .text-balance {
+      display: block;
+      text-wrap: balance;
+    }
+
+    /* Máquina de escrever */
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    @keyframes blink {
+      50% { border-color: transparent }
+    }
+    .typewriter {
+      display: inline-block;
+      overflow: hidden;
+      border-right: 2px solid white;
+      white-space: nowrap;
+      width: 0;
+      animation:
+        typing 4s steps(50, end) forwards,
+        blink 1s step-end infinite;
+    }
+
+    /* Fade e Slide */
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-up {
+      0% { transform: translateY(50px); }
+      100% { transform: translateY(0); }
+    }
+    .animate-fade-up {
+      animation: fade-up 1s ease-out forwards;
+    }
+    .animate-slide-up {
+      animation: slide-up 1.2s ease-out forwards;
+    }
+  </style>
+</footer>
 </body>
 </html>
