@@ -61,7 +61,15 @@
     <div class="overflow-x-auto">
       <div class="grid-tabela" id="tabela-container"></div>
     </div>
-
+    
+  <!-- Botão para gerar pergunta aleatória -->
+  <div class="mt-8 text-center">
+    <button onclick="gerarPergunta()" class="bg-green-500 text-white px-4 py-2 rounded shadow-lg hover:bg-green-600 transition transform hover:scale-105">
+      Sugestão de Pergunta
+    </button>
+    <p id="pergunta-aleatoria" class="mt-4 text-lg text-gray-800 font-semibold"></p>
+  </div>
+    
     <div id="info-panel" class="mt-8 p-4 border-2 rounded hidden bg-blue-50">
       <h2 id="element-name" class="text-2xl font-bold"></h2>
       <p><strong>Símbolo:</strong> <span id="element-symbol"></span></p>
@@ -282,7 +290,85 @@
       }
       tabela.innerHTML = html;
     }
-
+    const perguntasAleatorias = [
+      "O elemento é um metal?",
+      "O elemento é um ametal?",
+      "O elemento é um gás nobre?",
+      "O elemento faz parte dos halogênios?",
+      "O elemento está no grupo dos metais alcalinos?",
+      "O elemento está no grupo dos metais alcalino-terrosos?",
+      "O elemento é um metal de transição?",
+      "O elemento é um semicondutor?",
+      "O elemento é líquido à temperatura ambiente?",
+      "O elemento é gasoso à temperatura ambiente?",
+      "O elemento é sólido à temperatura ambiente?",
+      "O elemento está localizado no bloco s?",
+      "O elemento está localizado no bloco p?",
+      "O elemento está localizado no bloco d?",
+      "O elemento está localizado no bloco f?",
+      "O número atômico do elemento é maior que 30?",
+      "O número atômico do elemento é menor que 20?",
+      "O número atômico do elemento é par?",
+      "O símbolo químico do elemento possui apenas uma letra?",
+      "O elemento está no período 2 da tabela periódica?",
+      "O elemento está no período 3 da tabela periódica?",
+      "O elemento está no período 4 ou superior?",
+      "O elemento tem número atômico maior que 50?",
+      "O elemento é radioativo?",
+      "O elemento faz parte dos lantanídeos?",
+      "O elemento faz parte dos actinídeos?",
+      "O elemento é utilizado em baterias?",
+      "O elemento é usado na medicina?",
+      "O elemento é importante para a fabricação de vidros?",
+      "O elemento é amplamente utilizado na produção de joias?",
+      "O elemento é essencial para a vida?",
+      "O elemento é encontrado em estado gasoso na natureza?",
+      "O elemento é usado na construção civil?",
+      "O elemento possui propriedades semicondutoras?",
+      "O elemento é utilizado em catalisadores?",
+      "O elemento é um condutor elétrico eficiente?",
+      "O elemento faz parte dos elementos representativos?",
+      "O elemento está na família dos calcogênios?",
+      "O elemento tem aplicação em fertilizantes?",
+      "O elemento é um elemento sintético?",
+      "O elemento é encontrado na crosta terrestre em grande abundância?",
+      "O elemento faz parte da série dos metais pesados?",
+      "O elemento é utilizado em processos nucleares?",
+      "O elemento tem símbolo com duas letras?",
+      "O elemento está acima do número atômico 80?",
+      "O elemento pertence ao 6º período da Tabela?",
+      "O elemento tem aplicação na indústria de eletrônicos?",
+      "O elemento é um gás sob condições ambientes?",
+      "O elemento é tipicamente encontrado como molécula diatômica na natureza?",
+      "O elemento é usado em lâmpadas de iluminação?",
+      "O elemento é usado na fabricação de ligas metálicas?",
+      "O elemento é usado em soldagem ou processos de corte industrial?",
+      "O elemento está na família dos alcalinos?",
+      "O elemento está na família dos alcalino-terrosos?",
+      "O elemento está na família dos halogênios?",
+      "O elemento está na família dos gases nobres?",
+      "O elemento pertence ao grupo 13 (família do boro)?",
+      "O elemento pertence ao grupo 14 (família do carbono)?",
+      "O elemento pertence ao grupo 15 (família do nitrogênio)?",
+      "O elemento pertence ao grupo 16 (calcogênios)?",
+      "O elemento pertence ao grupo 17 (halogênios)?",
+      "O elemento pertence ao grupo 18 (gases nobres)?",
+      "O elemento tem aplicação na odontologia?",
+      "O elemento é usado na indústria aeroespacial?",
+      "O elemento é altamente reativo com a água?",
+      "O elemento é encontrado na forma metálica pura na natureza?",
+      "O elemento é amplamente usado como pigmento ou corante?",
+      "O elemento é utilizado como agente desinfetante?",
+      "O elemento é usado em termômetros?",
+      "O elemento é considerado tóxico?",
+      "O elemento é essencial para processos biológicos?",
+      "O elemento é magnético?",
+      "O elemento é inflamável?",
+      "O elemento pode ser encontrado em forma líquida sem necessidade de alta pressão ou temperatura?",
+      "O elemento tem baixa densidade?",
+      "O elemento é usado em explosivos ou fogos de artifício?",
+      "O elemento é um bom refletor de luz (usado em espelhos, por exemplo)?"
+    ];
     carregarElementos();
   </script>
     <footer class="mt-16 py-10 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-2xl relative overflow-hidden animate-fade-up animate-slide-up">
