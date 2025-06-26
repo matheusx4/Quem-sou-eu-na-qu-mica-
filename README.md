@@ -1,4 +1,3 @@
-# Quem-sou-eu-na-qu-mica-
 # Quem sou eu na Tabela Periódica?
 
 This is an interactive Periodic Table game inspired by the well-known "Who Am I?" game. Developed as a pedagogical tool by students of the Chemistry Licentiate program at IFCE Campus Aracati.
