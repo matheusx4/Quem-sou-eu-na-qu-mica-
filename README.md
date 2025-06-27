@@ -15,3 +15,9 @@ This initiative was developed with the invaluable support and contributions of m
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+---
+
+## Image Credits
+
+* **Favicon (Periodic Table Icon):** Icon designed by Freepik from [Flaticon](https://www.flaticon.com/).
