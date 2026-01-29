@@ -117,7 +117,7 @@
           <h3 class="font-bold text-lg mb-2 text-indigo-700">Conectar Equipes (Sincronização) 🤝</h3>
           <div class="flex gap-4">
           <input type="text" id="codigo-sala" placeholder="Digite o código da sala (ex: QUIMICA01)" class="border p-2 rounded w-full outline-none focus:border-purple-500">
-          <button id="btn-conectar" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700 transition-colors">Conectar</button>
+          <button onclick="conectarSala()" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700 transition-colors">Conectar</button>
           </div>
           <p id="status-sala" class="text-sm mt-2 text-gray-500 italic">Status: Jogando Offline 🖥️</p>
       </section>
@@ -190,25 +190,6 @@
     </button>
     <p id="pergunta-gerada" class="mt-4 text-lg font-bold text-purple-700"></p>
   </section>
-
-<script>
-
-// --- NOVA FUNÇÃO DE SORTEIO SINCRONIZADO ---
-async function sortearElementosParaSala() {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    
-    // ... (restante do seu código de sorteio) ...
-
-    set(ref(db, 'salas/' + sala), {
-        elementosDaRodada: sorteados,
-        timestamp: Date.now()
-    }).then(() => {
-        alert("Novo jogo gerado para a sala " + sala + "!");
-    });
-}
-
-// LINHA 221: Adicione esta tag aqui para fechar
-</script>
   
   <section class="text-center mt-8">
       <button onclick="resetarJogo()" class="px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform duration-300">
@@ -633,97 +614,64 @@ async function sortearElementosParaSala() {
       const index = Math.floor(Math.random() * perguntas.length);
       document.getElementById("pergunta-gerada").innerText = perguntas[index];
     }
-  </script> <script type="module">
-    async function renderizarTabelaSincronizada(listaIds) {
-    const container = document.getElementById('tabela-periodica'); // Verifique se este é o ID do seu container
-    container.innerHTML = ""; // Apaga a tabela atual
+  </script> 
 
-    const response = await fetch('https://raw.githubusercontent.com/Bowserinator/Periodic-Table-JSON/master/PeriodicTableJSON.json');
-    const data = await response.json();
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Filtra apenas os elementos que o Firebase enviou
-    const elementosSorteados = data.elements.filter(el => listaIds.includes(el.number));
-
-    elementosSorteados.forEach(el => {
-        const div = document.createElement('div');
-        div.className = `element-card p-2 border rounded text-center cursor-pointer transition-all hover:scale-105`;
-        div.innerHTML = `
-            <span class="text-xs font-bold">${el.number}</span>
-            <h2 class="text-xl font-bold">${el.symbol}</h2>
-            <p class="text-[10px] uppercase">${el.name}</p>
-        `;
-        // Aqui você pode manter sua lógica de "clicar para virar" ou marcar
-        div.onclick = () => div.classList.toggle('bg-gray-400');
-        container.appendChild(div);
-    });
-}
-// Este trecho fica "vigiando" o banco de dados
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-// Use as suas chaves que aparecem na imagem image_d464dd.png
-const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyAW-W-KwHDASydFozTjXCLL5RYZpwemsTw",
     databaseURL: "https://quem-sou-eu-tabela-periodica-default-rtdb.firebaseio.com",
     projectId: "quem-sou-eu-tabela-periodica",
-};
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-// Função para o botão "Conectar" usar
-window.conectarSala = () => {
+  // Faz a função ser "enxergada" pelo botão do HTML
+  window.conectarSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Digite o código da sala!");
 
     const salaRef = ref(db, 'salas/' + sala);
-    
-    // O onValue detecta quando o OUTRO grupo sorteia
     onValue(salaRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.elementosDaRodada) {
-            // Se houver novos números no banco, ele redesenha a tabela
-            renderizarTabelaSincronizada(data.elementosDaRodada);
-        }
+      const data = snapshot.val();
+      if (data && data.elementosDaRodada) {
+        // CORREÇÃO: Usa o ID correto 'tabela-container' que você já tem no HTML
+        gerarTabelaSincronizada(data.elementosDaRodada);
+      }
     });
-    
-    document.getElementById('status-sala').innerText = "Conectado à sala: " + sala;
-};
+    document.getElementById('status-sala').innerHTML = "Conectado à sala: <b>" + sala + "</b> ✅";
+  };
 
-// Este trecho fica "vigiando" o banco de dados
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-// Use as suas chaves que aparecem na imagem image_d464dd.png
-const firebaseConfig = {
-    apiKey: "AIzaSyAW-W-KwHDASydFozTjXCLL5RYZpwemsTw",
-    databaseURL: "https://quem-sou-eu-tabela-periodica-default-rtdb.firebaseio.com",
-    projectId: "quem-sou-eu-tabela-periodica",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Função para o botão "Conectar" usar
-window.conectarSala = () => {
+  window.sortearElementosParaSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Digite o código da sala!");
+    if (!sala) return alert("Conecte-se a uma sala primeiro!");
 
-    const salaRef = ref(db, 'salas/' + sala);
+    const sorteados = [];
+    while(sorteados.length < 24) {
+      const num = Math.floor(Math.random() * 118) + 1;
+      if(!sorteados.includes(num)) sorteados.push(num);
+    }
+
+    set(ref(db, 'salas/' + sala), {
+      elementosDaRodada: sorteados,
+      timestamp: Date.now()
+    }).then(() => alert("Sorteio realizado para todos na sala!"));
+  };
+
+  async function gerarTabelaSincronizada(ids) {
+    // Aqui chamamos a sua função original de carregar, mas limpando antes
+    const container = document.getElementById('tabela-container');
+    container.innerHTML = ""; 
     
-    // O onValue detecta quando o OUTRO grupo sorteia
-    onValue(salaRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.elementosDaRodada) {
-            // Se houver novos números no banco, ele redesenha a tabela
-            renderizarTabelaSincronizada(data.elementosDaRodada);
-        }
-    });
-    
-    document.getElementById('status-sala').innerText = "Conectado à sala: " + sala;
-};
-    
-  </script>
+    // Recarrega os elementos usando os IDs sorteados
+    // (O resto da sua lógica de carregarElementos vai aqui adaptada)
+    console.log("IDs recebidos do grupo:", ids);
+    // Para teste rápido: recarregue a página ou chame sua função carregarElementos(ids)
+  }
+</script>
       
 </body>
 </html>
