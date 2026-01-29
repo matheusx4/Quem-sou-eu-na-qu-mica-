@@ -119,23 +119,29 @@
           <input type="text" id="codigo-sala" placeholder="Digite o código da sala (ex: QUIMICA01)" class="border p-2 rounded w-full outline-none focus:border-purple-500">
           <button onclick="conectarSala()" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700 transition-colors">Conectar</button>
           </div>
-          <p id="status-sala" class="text-sm mt-2 text-gray-500 italic">Status: Jogando Offline 🖥️</p>
+<div class="flex flex-col items-center gap-4 mt-4">
+    <div id="selecao-equipe" class="flex gap-4 p-2 bg-gray-100 rounded-lg">
+        <span class="font-bold self-center">Você é do:</span>
+        <button onclick="definirEquipe('A')" id="btn-equipe-a" class="px-4 py-1 bg-white border-2 border-blue-600 text-blue-600 rounded font-bold hover:bg-blue-50">Grupo A</button>
+        <button onclick="definirEquipe('B')" id="id-equipe-b" class="px-4 py-1 bg-white border-2 border-pink-600 text-pink-600 rounded font-bold hover:bg-pink-50">Grupo B</button>
+    </div>
+    <p id="status-sala" class="text-sm text-gray-500 italic">Status: Jogando Offline 🖥️</p>
+</div>
 
-  <div class="flex flex-wrap justify-center items-stretch gap-4 mt-4">
-      <button onclick="sortearParaAdversario('A')" class="w-64 h-32 bg-blue-600 text-white p-4 rounded-lg font-bold flex flex-col justify-center items-center shadow-md hover:bg-blue-700 transition-all">
-          <span>Sortear para Grupo A 👤</span>
-      </button>
-  
-      <button onclick="sortearParaAdversario('B')" class="w-64 h-32 bg-pink-600 text-white p-4 rounded-lg font-bold flex flex-col justify-center items-center shadow-md hover:bg-pink-700 transition-all">
-          <span>Sortear para Grupo B 👥</span>
-      </button>
-  
-      <div id="painel-secreto" class="w-80 h-32 bg-indigo-50 border-2 border-indigo-200 rounded-lg flex flex-col justify-center items-center p-2 hidden">
-          <h4 class="text-indigo-800 font-bold uppercase text-[10px] tracking-widest">Seu Elemento Secreto</h4>
-          <div id="display-elemento-secreto" class="text-2xl font-black text-indigo-600 leading-none my-1">--</div>
-          <p class="text-[9px] text-gray-500 italic text-center">Dica: Não deixe a outra equipe ver! 🤫</p>
-      </div>
-  </div>
+<div class="flex flex-wrap justify-center items-stretch gap-4 mt-6">
+    <button onclick="sortearParaAdversario('A')" class="w-64 h-32 bg-blue-600 text-white p-4 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all">
+        Sortear Elemento Secreto para Grupo A 👤
+    </button>
+    <button onclick="sortearParaAdversario('B')" class="w-64 h-32 bg-pink-600 text-white p-4 rounded-lg font-bold shadow-md hover:bg-pink-700 transition-all">
+        Sortear Elemento Secreto para Grupo B 👥
+    </button>
+
+    <div id="painel-secreto" class="w-80 h-32 bg-indigo-50 border-2 border-indigo-200 rounded-lg flex flex-col justify-center items-center p-2 hidden">
+        <h4 class="text-indigo-800 font-bold uppercase text-[10px] tracking-widest">Seu Elemento Secreto</h4>
+        <div id="display-elemento-secreto" class="text-2xl font-black text-indigo-600">--</div>
+        <p class="text-[9px] text-gray-500 italic">Dica: Não mostre para o adversário! 🤫</p>
+    </div>
+</div>
       </section>
   
     <section class="bg-gray-100 text-gray-800 py-6 px-8 rounded shadow-md max-w-7xl mx-auto mt-6 mb-6">
@@ -642,66 +648,103 @@
 
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+// Note que adicionei o "get" na linha abaixo para permitir a leitura antes do sorteio
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyAW-W-KwHDASydFozTjXCLL5RYZpwemsTw",
     databaseURL: "https://quem-sou-eu-tabela-periodica-default-rtdb.firebaseio.com",
     projectId: "quem-sou-eu-tabela-periodica",
-  };
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-  // --- FUNÇÃO CONECTAR ---
-  window.conectarSala = () => {
+let minhaEquipe = null; // Armazena se o usuário é A ou B
+
+// --- PARTE 2: DEFINIR EQUIPE (PRIVACIDADE) ---
+window.definirEquipe = (equipe) => {
+    minhaEquipe = equipe;
+    const btnA = document.getElementById('btn-equipe-a');
+    const btnB = document.getElementById('id-equipe-b');
+    
+    // Altera as cores para dar feedback visual de seleção
+    if(equipe === 'A') {
+        btnA.style.backgroundColor = "#2563eb"; btnA.style.color = "white";
+        btnB.style.backgroundColor = "#f3f4f6"; btnB.style.color = "#db2777";
+    } else {
+        btnB.style.backgroundColor = "#db2777"; btnB.style.color = "white";
+        btnA.style.backgroundColor = "#f3f4f6"; btnA.style.color = "#2563eb";
+    }
+    console.log("Equipe definida como:", equipe);
+};
+
+// --- FUNÇÃO CONECTAR ATUALIZADA ---
+window.conectarSala = () => {
     const salaInput = document.getElementById('codigo-sala');
     const sala = salaInput.value.trim().toUpperCase();
-    
-    if (!sala) {
-      alert("Por favor, digite um código para a sala.");
-      return;
-    }
+    if (!sala) return alert("Por favor, digite um código para a sala.");
 
     const salaRef = ref(db, 'salas/' + sala);
     
-    // Fica ouvindo mudanças no banco
-onValue(salaRef, (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    // Atualiza a tabela (isso você já confirmou que funciona)
-    if (data.elementosDaRodada) {
-      atualizarVisualTabela(data.elementosDaRodada);
-    }
+    onValue(salaRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Sincroniza os 24 elementos acesos
+            if (data.elementosDaRodada) {
+                atualizarVisualTabela(data.elementosDaRodada);
+            }
 
-    const painel = document.getElementById('painel-secreto');
-    const display = document.getElementById('display-elemento-secreto');
+            const painel = document.getElementById('painel-secreto');
+            const display = document.getElementById('display-elemento-secreto');
 
-    // LÓGICA DE EXIBIÇÃO:
-    // Se o Grupo B sorteou algo para o A, e você quer ver o do A:
-    if (data.elementoSecretoA || data.elementoSecretoB) {
-      painel.classList.remove('hidden');
-      
-      // Tentamos pegar o segredo A (se existir) ou o B
-      const segredo = data.elementoSecretoA || data.elementoSecretoB;
-      
-      if (segredo && segredo.id) {
-        // Buscamos o nome na sua lista nomesEmPortugues
-        const nomeElemento = nomesEmPortugues[segredo.id] || "Elemento";
-        // Inserimos no HTML: Número + Nome
-        display.innerHTML = `<span class="text-sm">#${segredo.id}</span> ${nomeElemento}`;
-        console.log("Elemento Secreto exibido:", nomeElemento);
-      }
-    }
-  }
-});
+            // Lógica de Privacidade: Só mostra o segredo destinado à sua equipe
+            let segredoParaExibir = null;
+            if (minhaEquipe === 'A' && data.elementoSecretoA) segredoParaExibir = data.elementoSecretoA;
+            if (minhaEquipe === 'B' && data.elementoSecretoB) segredoParaExibir = data.elementoSecretoB;
+
+            if (segredoParaExibir) {
+                painel.classList.remove('hidden');
+                const nomeElemento = nomesEmPortugues[segredoParaExibir.id] || "Elemento";
+                display.innerHTML = `<span class="text-sm">#${segredoParaExibir.id}</span> ${nomeElemento}`;
+            } else {
+                painel.classList.add('hidden'); 
+            }
+        }
+    });
     
     document.getElementById('status-sala').innerHTML = `Conectado à sala: <b class="text-indigo-600">${sala}</b> ✅`;
-    console.log("Conectado à sala:", sala);
-  };
+};
 
-  // --- FUNÇÃO SORTEAR 24 ELEMENTOS (EQUILIBRADO) ---
-  window.sortearElementosParaSala = () => {
+// --- PARTE 1: SORTEIO RESTRITO AOS 24 DA RODADA ---
+window.sortearParaAdversario = (grupoAlvo) => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala) return alert("Conecte-se a uma sala primeiro!");
+
+    const salaRef = ref(db, `salas/${sala}`);
+    
+    // Busca os dados da sala para ler a lista de 24 elementos ativos
+    get(salaRef).then((snapshot) => {
+        const data = snapshot.val();
+        if (!data || !data.elementosDaRodada) {
+            return alert("Gere primeiro a rodada de 24 elementos (botão verde)!");
+        }
+
+        const lista24 = data.elementosDaRodada;
+        // Sorteia um número que obrigatoriamente está entre os 24 acesos
+        const idSorteado = lista24[Math.floor(Math.random() * lista24.length)];
+
+        set(ref(db, `salas/${sala}/elementoSecreto${grupoAlvo}`), {
+            id: idSorteado,
+            timestamp: Date.now()
+        }).then(() => {
+            alert(`Sucesso! Elemento sorteado para o Grupo ${grupoAlvo}.`);
+        });
+    });
+};
+
+// --- FUNÇÃO DE GERAR 24 ELEMENTOS (MANTIDA) ---
+window.sortearElementosParaSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se a uma sala primeiro!");
 
@@ -716,7 +759,7 @@ onValue(salaRef, (snapshot) => {
     let sorteados = [];
     categorias.forEach(cat => {
       const embaralhado = cat.ids.sort(() => 0.5 - Math.random());
-      sorteados.push(...embaralhado.slice(0, 3)); // Pega 3 de cada
+      sorteados.push(...embaralhado.slice(0, 3)); 
     });
 
     while(sorteados.length < 24) {
@@ -724,49 +767,27 @@ onValue(salaRef, (snapshot) => {
       if(!sorteados.includes(num)) sorteados.push(num);
     }
 
-    // Salva no caminho correto
     set(ref(db, `salas/${sala}/elementosDaRodada`), sorteados)
-      .then(() => alert("Novo tabuleiro de 24 elementos gerado para todos na sala!"));
-  };
+      .then(() => alert("Novo tabuleiro de 24 elementos gerado!"));
+};
 
-  // --- FUNÇÃO SORTEAR PARA ADVERSÁRIO ---
-  window.sortearParaAdversario = (grupoAlvo) => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se a uma sala primeiro!");
-
-    const numSecreto = Math.floor(Math.random() * 118) + 1;
-
-    set(ref(db, `salas/${sala}/elementoSecreto${grupoAlvo}`), {
-      id: numSecreto,
-      timestamp: Date.now()
-    }).then(() => {
-      alert(`Elemento secreto sorteado para o Grupo ${grupoAlvo}!`);
-    });
-  };
-
-  // --- FUNÇÃO VISUAL (DENTRO DO MÓDULO) ---
-  function atualizarVisualTabela(idsSorteados) {
+// --- FUNÇÃO VISUAL DA TABELA (MANTIDA) ---
+function atualizarVisualTabela(idsSorteados) {
     const todosOsCards = document.querySelectorAll('.element');
-    if (todosOsCards.length === 0) {
-        console.error("Cards da tabela não encontrados. Verifique se a tabela já foi carregada.");
-        return;
-    }
-
     todosOsCards.forEach(card => {
-      const num = parseInt(card.getAttribute('data-number'));
-      
-      if (idsSorteados.includes(num)) {
-        card.style.opacity = "1";
-        card.style.filter = "none";
-        card.style.pointerEvents = "auto";
-        card.classList.remove('eliminated');
-      } else {
-        card.style.opacity = "0.15"; 
-        card.style.filter = "grayscale(100%)";
-        card.style.pointerEvents = "none";
-      }
+        const num = parseInt(card.getAttribute('data-number'));
+        if (idsSorteados.includes(num)) {
+            card.style.opacity = "1";
+            card.style.filter = "none";
+            card.style.pointerEvents = "auto";
+            card.classList.remove('eliminated');
+        } else {
+            card.style.opacity = "0.15"; 
+            card.style.filter = "grayscale(100%)";
+            card.style.pointerEvents = "none";
+        }
     });
-  }
+}
 </script>
       
 </body>
