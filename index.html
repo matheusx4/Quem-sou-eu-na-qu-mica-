@@ -112,7 +112,16 @@
             <div class="w-12 h-24 bg-pink-400 rounded-b-full shadow-lg animate-pulse"></div>
         </div>
     </header>
-
+  
+  <section class="max-w-7xl mx-auto mt-6 p-6 bg-white rounded-lg shadow-md border-2 border-indigo-500">
+          <h3 class="font-bold text-lg mb-2 text-indigo-700">Conectar Equipes (Sincronização) 🤝</h3>
+          <div class="flex gap-4">
+          <input type="text" id="codigo-sala" placeholder="Digite o código da sala (ex: QUIMICA01)" class="border p-2 rounded w-full outline-none focus:border-purple-500">
+          <button id="btn-conectar" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700 transition-colors">Conectar</button>
+          </div>
+          <p id="status-sala" class="text-sm mt-2 text-gray-500 italic">Status: Jogando Offline 🖥️</p>
+      </section>
+  
     <section class="bg-gray-100 text-gray-800 py-6 px-8 rounded shadow-md max-w-7xl mx-auto mt-6 mb-6">
         <h2 class="text-3xl font-bold mb-2">Sobre esta Tabela Periódica</h2>
         <ol class="list-none text-lg space-y-2">
@@ -599,6 +608,37 @@
       const index = Math.floor(Math.random() * perguntas.length);
       document.getElementById("pergunta-gerada").innerText = perguntas[index];
     }
+  </script> <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAW-W-KwHDASydFozTjXCLL5RYZpwemsTw",
+      authDomain: "quem-sou-eu-tabela-periodica.firebaseapp.com",
+      databaseURL: "https://quem-sou-eu-tabela-periodica-default-rtdb.firebaseio.com",
+      projectId: "quem-sou-eu-tabela-periodica",
+      storageBucket: "quem-sou-eu-tabela-periodica.firebasestorage.app",
+      messagingSenderId: "982187769202",
+      appId: "1:982187769202:web:d244b495d28eb93d2c71eb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById('btn-conectar').onclick = () => {
+      const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+      if (!sala) return alert("Por favor, digite um código para a sala!");
+      
+      document.getElementById('status-sala').innerHTML = "Conectado à sala: <b>" + sala + "</b> ✅";
+      
+      const salaRef = ref(db, 'salas/' + sala);
+      onValue(salaRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.mensagem) {
+           console.log("Sincronização ativa!");
+        }
+      });
+    };
   </script>
 </body>
 </html>
