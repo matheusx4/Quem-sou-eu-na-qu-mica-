@@ -646,30 +646,38 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // CONECTAR À SALA
+  // --- FUNÇÃO CONECTAR ---
   window.conectarSala = () => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Digite o código da sala!");
+    const salaInput = document.getElementById('codigo-sala');
+    const sala = salaInput.value.trim().toUpperCase();
+    
+    if (!sala) {
+      alert("Por favor, digite um código para a sala.");
+      return;
+    }
 
     const salaRef = ref(db, 'salas/' + sala);
     
+    // Fica ouvindo mudanças no banco
     onValue(salaRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        // Se houver uma rodada de 24 elementos sorteada, aplica o visual "apagado"
         if (data.elementosDaRodada) {
+          console.log("Rodada atualizada:", data.elementosDaRodada);
           atualizarVisualTabela(data.elementosDaRodada);
         }
-        
-        // Se houver um elemento secreto para o seu grupo, avisa (opcional)
-        // Você pode criar um elemento HTML para mostrar isso depois
+        if (data.elementoSecretoA) {
+             console.log("Elemento Secreto A sorteado");
+        }
       }
     });
     
-    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b>${sala}</b> ✅`;
+    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b class="text-indigo-600">${sala}</b> ✅`;
+    console.log("Conectado à sala:", sala);
   };
 
-window.sortearElementosParaSala = () => {
+  // --- FUNÇÃO SORTEAR 24 ELEMENTOS (EQUILIBRADO) ---
+  window.sortearElementosParaSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se a uma sala primeiro!");
 
@@ -684,7 +692,7 @@ window.sortearElementosParaSala = () => {
     let sorteados = [];
     categorias.forEach(cat => {
       const embaralhado = cat.ids.sort(() => 0.5 - Math.random());
-      sorteados.push(...embaralhado.slice(0, 3));
+      sorteados.push(...embaralhado.slice(0, 3)); // Pega 3 de cada
     });
 
     while(sorteados.length < 24) {
@@ -692,60 +700,49 @@ window.sortearElementosParaSala = () => {
       if(!sorteados.includes(num)) sorteados.push(num);
     }
 
-    set(ref(db, 'salas/' + sala + '/elementosDaRodada'), sorteados)
-      .then(() => alert("Novo tabuleiro de 24 elementos gerado!"));
+    // Salva no caminho correto
+    set(ref(db, `salas/${sala}/elementosDaRodada`), sorteados)
+      .then(() => alert("Novo tabuleiro de 24 elementos gerado para todos na sala!"));
   };
 
-    function atualizarVisualTabela(idsSorteados) {
-    // Seleciona todos os quadradinhos da tabela
+  // --- FUNÇÃO SORTEAR PARA ADVERSÁRIO ---
+  window.sortearParaAdversario = (grupoAlvo) => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala) return alert("Conecte-se a uma sala primeiro!");
+
+    const numSecreto = Math.floor(Math.random() * 118) + 1;
+
+    set(ref(db, `salas/${sala}/elementoSecreto${grupoAlvo}`), {
+      id: numSecreto,
+      timestamp: Date.now()
+    }).then(() => {
+      alert(`Elemento secreto sorteado para o Grupo ${grupoAlvo}!`);
+    });
+  };
+
+  // --- FUNÇÃO VISUAL (DENTRO DO MÓDULO) ---
+  function atualizarVisualTabela(idsSorteados) {
     const todosOsCards = document.querySelectorAll('.element');
-    
+    if (todosOsCards.length === 0) {
+        console.error("Cards da tabela não encontrados. Verifique se a tabela já foi carregada.");
+        return;
+    }
+
     todosOsCards.forEach(card => {
       const num = parseInt(card.getAttribute('data-number'));
       
       if (idsSorteados.includes(num)) {
-        // Elementos da rodada ficam normais
         card.style.opacity = "1";
         card.style.filter = "none";
         card.style.pointerEvents = "auto";
+        card.classList.remove('eliminated');
       } else {
-        // Demais elementos ficam "apagados"
         card.style.opacity = "0.15"; 
         card.style.filter = "grayscale(100%)";
         card.style.pointerEvents = "none";
       }
     });
   }
-    
-    // ESCUTAR A SALA
-    onValue(salaRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        console.log("Dados da sala atualizados", data);
-        // Aqui você decide qual grupo quer ver. 
-        // Exemplo: Se você é do Grupo A, você quer ver o que foi sorteado para você adivinhar.
-      }
-    });
-    
-    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b>${sala}</b> ✅`;
-  };
-
-  // FUNÇÃO PARA SORTEAR O ELEMENTO QUE A OUTRA EQUIPE VAI ADIVINHAR
-  window.sortearParaAdversario = (grupoDestino) => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se a uma sala!");
-
-    // Sorteia 1 elemento entre os 118
-    const numSorteado = Math.floor(Math.random() * 118) + 1;
-
-    // Salva no caminho específico do grupo (A ou B)
-    set(ref(db, `salas/${sala}/elementoGrupo${grupoDestino}`), {
-      id: numSorteado,
-      timestamp: Date.now()
-    }).then(() => {
-      alert(`Você sorteou um elemento para o Grupo ${grupoDestino}!`);
-    });
-  };
 </script>
       
 </body>
