@@ -120,6 +120,15 @@
           <button onclick="conectarSala()" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700 transition-colors">Conectar</button>
           </div>
           <p id="status-sala" class="text-sm mt-2 text-gray-500 italic">Status: Jogando Offline 🖥️</p>
+
+    <div class="flex flex-wrap justify-center gap-4 mt-4">
+    <button onclick="sortearParaAdversario('A')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold">
+        Sortear para Grupo A 👤
+    </button>
+    <button onclick="sortearParaAdversario('B')" class="bg-pink-600 text-white px-4 py-2 rounded font-bold">
+        Sortear para Grupo B 👥
+    </button>
+</div>
       </section>
   
     <section class="bg-gray-100 text-gray-800 py-6 px-8 rounded shadow-md max-w-7xl mx-auto mt-6 mb-6">
@@ -629,48 +638,42 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Faz a função ser "enxergada" pelo botão do HTML
+  // CONECTAR À SALA
   window.conectarSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Digite o código da sala!");
 
     const salaRef = ref(db, 'salas/' + sala);
+    
+    // ESCUTAR A SALA
     onValue(salaRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && data.elementosDaRodada) {
-        // CORREÇÃO: Usa o ID correto 'tabela-container' que você já tem no HTML
-        gerarTabelaSincronizada(data.elementosDaRodada);
+      if (data) {
+        console.log("Dados da sala atualizados", data);
+        // Aqui você decide qual grupo quer ver. 
+        // Exemplo: Se você é do Grupo A, você quer ver o que foi sorteado para você adivinhar.
       }
     });
-    document.getElementById('status-sala').innerHTML = "Conectado à sala: <b>" + sala + "</b> ✅";
-  };
-
-  window.sortearElementosParaSala = () => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se a uma sala primeiro!");
-
-    const sorteados = [];
-    while(sorteados.length < 24) {
-      const num = Math.floor(Math.random() * 118) + 1;
-      if(!sorteados.includes(num)) sorteados.push(num);
-    }
-
-    set(ref(db, 'salas/' + sala), {
-      elementosDaRodada: sorteados,
-      timestamp: Date.now()
-    }).then(() => alert("Sorteio realizado para todos na sala!"));
-  };
-
-  async function gerarTabelaSincronizada(ids) {
-    // Aqui chamamos a sua função original de carregar, mas limpando antes
-    const container = document.getElementById('tabela-container');
-    container.innerHTML = ""; 
     
-    // Recarrega os elementos usando os IDs sorteados
-    // (O resto da sua lógica de carregarElementos vai aqui adaptada)
-    console.log("IDs recebidos do grupo:", ids);
-    // Para teste rápido: recarregue a página ou chame sua função carregarElementos(ids)
-  }
+    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b>${sala}</b> ✅`;
+  };
+
+  // FUNÇÃO PARA SORTEAR O ELEMENTO QUE A OUTRA EQUIPE VAI ADIVINHAR
+  window.sortearParaAdversario = (grupoDestino) => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala) return alert("Conecte-se a uma sala!");
+
+    // Sorteia 1 elemento entre os 118
+    const numSorteado = Math.floor(Math.random() * 118) + 1;
+
+    // Salva no caminho específico do grupo (A ou B)
+    set(ref(db, `salas/${sala}/elementoGrupo${grupoDestino}`), {
+      id: numSorteado,
+      timestamp: Date.now()
+    }).then(() => {
+      alert(`Você sorteou um elemento para o Grupo ${grupoDestino}!`);
+    });
+  };
 </script>
       
 </body>
