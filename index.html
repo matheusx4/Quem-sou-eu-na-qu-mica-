@@ -121,19 +121,21 @@
           </div>
           <p id="status-sala" class="text-sm mt-2 text-gray-500 italic">Status: Jogando Offline 🖥️</p>
 
-    <div class="flex flex-wrap justify-center gap-4 mt-4">
-    <button onclick="sortearParaAdversario('A')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold">
-        Sortear para Grupo A 👤
-    </button>
-    <button onclick="sortearParaAdversario('B')" class="bg-pink-600 text-white px-4 py-2 rounded font-bold">
-        Sortear para Grupo B 👥
-    </button>
-      <div id="painel-secreto" class="mt-6 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg hidden text-center animate-fade-up">
-    <h4 class="text-indigo-800 font-bold mb-1 uppercase text-sm tracking-widest">Seu Elemento Secreto para Advinhar</h4>
-    <div id="display-elemento-secreto" class="text-4xl font-black text-indigo-600">--</div>
-    <p class="text-xs text-gray-500 mt-2">Dica: Não deixe a outra equipe ver sua tela! 🤫</p>
-</div>
-</div>
+  <div class="flex flex-wrap justify-center items-stretch gap-4 mt-4">
+      <button onclick="sortearParaAdversario('A')" class="w-64 h-32 bg-blue-600 text-white p-4 rounded-lg font-bold flex flex-col justify-center items-center shadow-md hover:bg-blue-700 transition-all">
+          <span>Sortear para Grupo A 👤</span>
+      </button>
+  
+      <button onclick="sortearParaAdversario('B')" class="w-64 h-32 bg-pink-600 text-white p-4 rounded-lg font-bold flex flex-col justify-center items-center shadow-md hover:bg-pink-700 transition-all">
+          <span>Sortear para Grupo B 👥</span>
+      </button>
+  
+      <div id="painel-secreto" class="w-80 h-32 bg-indigo-50 border-2 border-indigo-200 rounded-lg flex flex-col justify-center items-center p-2 hidden">
+          <h4 class="text-indigo-800 font-bold uppercase text-[10px] tracking-widest">Seu Elemento Secreto</h4>
+          <div id="display-elemento-secreto" class="text-2xl font-black text-indigo-600 leading-none my-1">--</div>
+          <p class="text-[9px] text-gray-500 italic text-center">Dica: Não deixe a outra equipe ver! 🤫</p>
+      </div>
+  </div>
       </section>
   
     <section class="bg-gray-100 text-gray-800 py-6 px-8 rounded shadow-md max-w-7xl mx-auto mt-6 mb-6">
@@ -665,34 +667,34 @@
     
     // Fica ouvindo mudanças no banco
 onValue(salaRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        // 1. Atualiza a tabela (os 24 elementos)
-        if (data.elementosDaRodada) {
-          atualizarVisualTabela(data.elementosDaRodada);
-        }
-        
-        // 2. Verifica se você é do Grupo A ou B (via prompt ou seleção)
-        // Por enquanto, vamos mostrar conforme o que chegar no banco:
-        const painel = document.getElementById('painel-secreto');
-        const display = document.getElementById('display-elemento-secreto');
+  const data = snapshot.val();
+  if (data) {
+    // Atualiza a tabela (isso você já confirmou que funciona)
+    if (data.elementosDaRodada) {
+      atualizarVisualTabela(data.elementosDaRodada);
+    }
 
-        // Lógica: Se o Grupo A foi sorteado, ele aparece aqui
-        // Você pode perguntar ao aluno no início "Qual seu grupo?" 
-        // Mas para testar agora, vamos exibir o que estiver disponível:
-        if (data.elementoSecretoA || data.elementoSecretoB) {
-            painel.classList.remove('hidden');
-            
-            // Aqui você decide: quer ver o Segredo do A ou do B?
-            // Exemplo mostrando o último sorteado:
-            const segredo = data.elementoSecretoA || data.elementoSecretoB;
-            
-            // Buscamos o nome no objeto 'nomesEmPortugues' que você já tem no código
-            const nomeElemento = window.nomesEmPortugues[segredo.id] || "Desconhecido";
-            display.innerHTML = `${segredo.id} - ${nomeElemento}`;
-        }
+    const painel = document.getElementById('painel-secreto');
+    const display = document.getElementById('display-elemento-secreto');
+
+    // LÓGICA DE EXIBIÇÃO:
+    // Se o Grupo B sorteou algo para o A, e você quer ver o do A:
+    if (data.elementoSecretoA || data.elementoSecretoB) {
+      painel.classList.remove('hidden');
+      
+      // Tentamos pegar o segredo A (se existir) ou o B
+      const segredo = data.elementoSecretoA || data.elementoSecretoB;
+      
+      if (segredo && segredo.id) {
+        // Buscamos o nome na sua lista nomesEmPortugues
+        const nomeElemento = nomesEmPortugues[segredo.id] || "Elemento";
+        // Inserimos no HTML: Número + Nome
+        display.innerHTML = `<span class="text-sm">#${segredo.id}</span> ${nomeElemento}`;
+        console.log("Elemento Secreto exibido:", nomeElemento);
       }
-    });
+    }
+  }
+});
     
     document.getElementById('status-sala').innerHTML = `Conectado à sala: <b class="text-indigo-600">${sala}</b> ✅`;
     console.log("Conectado à sala:", sala);
