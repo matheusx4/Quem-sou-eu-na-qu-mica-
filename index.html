@@ -204,6 +204,7 @@
       <button onclick="resetarJogo()" class="px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform duration-300">
           Resetar Jogo 🔄
       </button>
+    
   </section>
       
 <section class="text-center mt-4">
@@ -535,6 +536,13 @@
       fecharInfo(); // Garante que o painel de info esteja fechado
       document.getElementById("pergunta-gerada").innerText = ""; // Limpa a pergunta sugerida
       selectedElementNumber = null; // Reseta o elemento selecionado
+
+      const todosOsCards = document.querySelectorAll('.element');
+    todosOsCards.forEach(card => {
+      card.style.opacity = "1";
+      card.style.filter = "none";
+      card.style.pointerEvents = "auto";
+    });
     }
 
     carregarElementos(); // Chama a função para carregar elementos ao iniciar a página
@@ -644,6 +652,70 @@
     if (!sala) return alert("Digite o código da sala!");
 
     const salaRef = ref(db, 'salas/' + sala);
+    
+    onValue(salaRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Se houver uma rodada de 24 elementos sorteada, aplica o visual "apagado"
+        if (data.elementosDaRodada) {
+          atualizarVisualTabela(data.elementosDaRodada);
+        }
+        
+        // Se houver um elemento secreto para o seu grupo, avisa (opcional)
+        // Você pode criar um elemento HTML para mostrar isso depois
+      }
+    });
+    
+    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b>${sala}</b> ✅`;
+  };
+
+window.sortearElementosParaSala = () => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala) return alert("Conecte-se a uma sala primeiro!");
+
+    const categorias = [
+      { nome: "Metais Alcalinos", ids: [3, 11, 19, 37, 55, 87] },
+      { nome: "Alcalino-terrosos", ids: [4, 12, 20, 38, 56, 88] },
+      { nome: "Gases Nobres", ids: [2, 10, 18, 36, 54, 86] },
+      { nome: "Halogênios", ids: [9, 17, 35, 53, 85] },
+      { nome: "Não Metais", ids: [6, 7, 8, 15, 16, 34] }
+    ];
+
+    let sorteados = [];
+    categorias.forEach(cat => {
+      const embaralhado = cat.ids.sort(() => 0.5 - Math.random());
+      sorteados.push(...embaralhado.slice(0, 3));
+    });
+
+    while(sorteados.length < 24) {
+      const num = Math.floor(Math.random() * 118) + 1;
+      if(!sorteados.includes(num)) sorteados.push(num);
+    }
+
+    set(ref(db, 'salas/' + sala + '/elementosDaRodada'), sorteados)
+      .then(() => alert("Novo tabuleiro de 24 elementos gerado!"));
+  };
+
+    function atualizarVisualTabela(idsSorteados) {
+    // Seleciona todos os quadradinhos da tabela
+    const todosOsCards = document.querySelectorAll('.element');
+    
+    todosOsCards.forEach(card => {
+      const num = parseInt(card.getAttribute('data-number'));
+      
+      if (idsSorteados.includes(num)) {
+        // Elementos da rodada ficam normais
+        card.style.opacity = "1";
+        card.style.filter = "none";
+        card.style.pointerEvents = "auto";
+      } else {
+        // Demais elementos ficam "apagados"
+        card.style.opacity = "0.15"; 
+        card.style.filter = "grayscale(100%)";
+        card.style.pointerEvents = "none";
+      }
+    });
+  }
     
     // ESCUTAR A SALA
     onValue(salaRef, (snapshot) => {
