@@ -128,6 +128,11 @@
     <button onclick="sortearParaAdversario('B')" class="bg-pink-600 text-white px-4 py-2 rounded font-bold">
         Sortear para Grupo B 👥
     </button>
+      <div id="painel-secreto" class="mt-6 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg hidden text-center animate-fade-up">
+    <h4 class="text-indigo-800 font-bold mb-1 uppercase text-sm tracking-widest">Seu Elemento Secreto para Advinhar</h4>
+    <div id="display-elemento-secreto" class="text-4xl font-black text-indigo-600">--</div>
+    <p class="text-xs text-gray-500 mt-2">Dica: Não deixe a outra equipe ver sua tela! 🤫</p>
+</div>
 </div>
       </section>
   
@@ -659,15 +664,32 @@
     const salaRef = ref(db, 'salas/' + sala);
     
     // Fica ouvindo mudanças no banco
-    onValue(salaRef, (snapshot) => {
+onValue(salaRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        // 1. Atualiza a tabela (os 24 elementos)
         if (data.elementosDaRodada) {
-          console.log("Rodada atualizada:", data.elementosDaRodada);
           atualizarVisualTabela(data.elementosDaRodada);
         }
-        if (data.elementoSecretoA) {
-             console.log("Elemento Secreto A sorteado");
+        
+        // 2. Verifica se você é do Grupo A ou B (via prompt ou seleção)
+        // Por enquanto, vamos mostrar conforme o que chegar no banco:
+        const painel = document.getElementById('painel-secreto');
+        const display = document.getElementById('display-elemento-secreto');
+
+        // Lógica: Se o Grupo A foi sorteado, ele aparece aqui
+        // Você pode perguntar ao aluno no início "Qual seu grupo?" 
+        // Mas para testar agora, vamos exibir o que estiver disponível:
+        if (data.elementoSecretoA || data.elementoSecretoB) {
+            painel.classList.remove('hidden');
+            
+            // Aqui você decide: quer ver o Segredo do A ou do B?
+            // Exemplo mostrando o último sorteado:
+            const segredo = data.elementoSecretoA || data.elementoSecretoB;
+            
+            // Buscamos o nome no objeto 'nomesEmPortugues' que você já tem no código
+            const nomeElemento = window.nomesEmPortugues[segredo.id] || "Desconhecido";
+            display.innerHTML = `${segredo.id} - ${nomeElemento}`;
         }
       }
     });
