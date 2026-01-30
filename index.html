@@ -117,9 +117,10 @@
     <h3 class="font-bold text-lg mb-2 text-indigo-700">Painel de Jogo Sincronizado 🧪</h3>
     
     <div class="flex gap-4 mb-4">
-        <input type="text" id="codigo-sala" placeholder="CÓDIGO DA SALA" class="border p-2 rounded w-full outline-none focus:border-purple-500">
+        <input type="text" id="codigo-sala" placeholder="Ex: QUIMICA01" class="border p-2 rounded w-full outline-none focus:border-purple-500">
         <button onclick="conectarSala()" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700">Conectar Sala</button>
     </div>
+    <p id="status-sala" class="text-sm mb-6 text-gray-500 italic">Status: Aguardando conexão... 🔌</p>
 
     <div id="container-selecao-equipe" class="bg-gray-100 p-4 rounded-xl mb-6">
         <p id="titulo-equipe" class="font-bold text-gray-700 mb-2">Escolha sua Equipe:</p>
@@ -136,7 +137,7 @@
         <button id="btn-sortear-b" onclick="sortearParaAdversario('B')" class="bg-pink-600 text-white px-4 py-2 rounded font-bold shadow-md">Gerar Segredo Grupo B 👥</button>
     </div>
 
-    <div id="painel-secreto" class="w-full mt-6 p-6 rounded-2xl hidden shadow-xl animate-pulse">
+    <div id="painel-secreto" class="w-full mt-6 p-6 rounded-2xl hidden shadow-xl animate-pulse text-white">
         <h4 class="font-bold uppercase text-xs tracking-widest opacity-80">Seu Elemento Secreto:</h4>
         <div id="display-elemento-secreto" class="text-4xl font-black mt-2">--</div>
     </div>
@@ -660,37 +661,84 @@
   let minhaEquipe = null; 
 
   // --- 1. CONECTAR À SALA ---
-  window.conectarSala = () => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Digite o código da sala!");
+// --- 1. CONECTAR À SALA COM FEEDBACK ---
+window.conectarSala = () => {
+    const salaInput = document.getElementById('codigo-sala');
+    const sala = salaInput.value.trim().toUpperCase();
+    const statusTxt = document.getElementById('status-sala');
+
+    if (!sala) return alert("Por favor, digite um código (ex: QUIMICA01)");
 
     const salaRef = ref(db, 'salas/' + sala);
     
     onValue(salaRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        // Atualiza a tabela de 24 elementos para todos
-        if (data.elementosDaRodada) atualizarVisualTabela(data.elementosDaRodada);
+        const data = snapshot.val();
+        if (data) {
+            if (data.elementosDaRodada) atualizarVisualTabela(data.elementosDaRodada);
 
-        const painel = document.getElementById('painel-secreto');
-        const display = document.getElementById('display-elemento-secreto');
+            const painel = document.getElementById('painel-secreto');
+            const display = document.getElementById('display-elemento-secreto');
 
-        // SÓ MOSTRA O SEGREDO SE O USUÁRIO JÁ TIVER ESCOLHIDO UMA EQUIPE
-        if (minhaEquipe) {
-            let segredoData = (minhaEquipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
+            if (minhaEquipe) {
+                let segredoData = (minhaEquipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
 
-            if (segredoData && segredoData.id) {
-                painel.classList.remove('hidden');
-                const nome = nomesEmPortugues[segredoData.id] || "Elemento";
-                display.innerHTML = `#${segredoData.id} ${nome}`;
-            } else {
-                painel.classList.add('hidden');
+                if (segredoData && segredoData.id) {
+                    painel.classList.remove('hidden');
+                    const nome = nomesEmPortugues[segredoData.id] || "Elemento";
+                    display.innerHTML = `#${segredoData.id} ${nome}`;
+                } else {
+                    painel.classList.add('hidden');
+                }
             }
         }
-      }
     });
-    document.getElementById('status-sala').innerHTML = `Conectado à Sala: <b>${sala}</b> ✅`;
-  };
+
+    // Informa ao usuário em qual sala ele está
+    statusTxt.innerHTML = `Conectado à sala: <b class="text-indigo-600">${sala}</b> ✅`;
+    statusTxt.classList.remove('text-gray-500');
+    statusTxt.classList.add('text-green-600');
+};
+
+// --- 2. DEFINIR EQUIPE COM CORES E TRAVAS ---
+window.definirEquipe = (equipe) => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala) return alert("Conecte-se a uma sala antes de escolher a equipe!");
+    
+    minhaEquipe = equipe;
+
+    // Trava Visual: Esconde o botão da outra equipe
+    document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
+    document.getElementById('btn-equipe-b').classList.toggle('hidden', equipe !== 'B');
+    
+    // Esconde o botão de sorteio manual que não pertence a você
+    document.getElementById('btn-sortear-a').classList.toggle('hidden', equipe !== 'A');
+    document.getElementById('btn-sortear-b').classList.toggle('hidden', equipe !== 'B');
+    
+    document.getElementById('msg-trava').classList.remove('hidden');
+
+    // Ajusta a cor do painel secreto: Azul para A, Rosa para B
+    const painel = document.getElementById('painel-secreto');
+    if(equipe === 'A') {
+        painel.style.backgroundColor = "#2563eb"; // Blue-600
+    } else {
+        painel.style.backgroundColor = "#db2777"; // Pink-600
+    }
+
+    // Verifica se já existe sorteio no banco para não repetir
+    const salaRef = ref(db, `salas/${sala}`);
+    get(salaRef).then((snapshot) => {
+        const data = snapshot.val();
+        if (!data || !data.elementosDaRodada) return alert("Aguarde o professor gerar os 24 elementos!");
+
+        const segredoJaExiste = (equipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
+
+        if (!segredoJaExiste) {
+            const lista = data.elementosDaRodada;
+            const sorteado = lista[Math.floor(Math.random() * lista.length)];
+            set(ref(db, `salas/${sala}/elementoSecreto${equipe}`), { id: sorteado, ts: Date.now() });
+        }
+    });
+};
 
   // --- 2. ESCOLHER EQUIPE E SORTEIO AUTOMÁTICO ---
 window.definirEquipe = (equipe) => {
