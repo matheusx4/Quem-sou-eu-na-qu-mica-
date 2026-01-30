@@ -643,6 +643,20 @@
     }
   </script> 
 
+Entendi o que aconteceu. O código "atropelou" as etapas: ele está tentando mostrar o segredo antes mesmo de você escolher quem você é no jogo, e a lógica de esconder os botões removeu sua capacidade de gerar novas rodadas.
+
+Para resolver isso de uma vez por todas, vamos organizar o fluxo assim:
+
+Conectar: Apenas entra na sala (não mostra segredo nenhum).
+
+Escolher Equipe: Trava o aluno e, só então, mostra o segredo que já está no banco (ou sorteia o primeiro).
+
+Botão de Nova Rodada: Vamos criar um botão de "Limpar/Nova Rodada" que reseta os segredos sem precisar sair da sala.
+
+Aqui está o código completo para você substituir tudo dentro do seu <script type="module">. Ele está comentado para você entender cada parte:
+
+JavaScript
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -656,141 +670,119 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  let minhaEquipe = null; // Trava o aluno na equipe escolhida
+  let minhaEquipe = null; 
 
-  // --- FUNÇÃO: DEFINIR EQUIPE ---
-window.definirEquipe = (equipe) => {
-    minhaEquipe = equipe;
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    
-    if (!sala) {
-        alert("Por favor, conecte-se a uma sala primeiro!");
-        return;
-    }
-
-    // Trava visual da interface (mesma lógica de antes)
-    const btnA = document.getElementById('btn-equipe-a');
-    const btnB = document.getElementById('btn-equipe-b');
-    const controles = document.getElementById('controles-sorteio');
-    if (controles) controles.classList.add('hidden');
-
-    if(equipe === 'A') {
-        btnB.classList.add('hidden');
-        btnA.className = "px-10 py-3 bg-blue-600 text-white rounded-xl font-black shadow-lg cursor-default";
-        btnA.innerText = "VOCÊ É EQUIPE A";
-    } else {
-        btnA.classList.add('hidden');
-        btnB.className = "px-10 py-3 bg-pink-600 text-white rounded-xl font-black shadow-lg cursor-default";
-        btnB.innerText = "VOCÊ É EQUIPE B";
-    }
-
-    // --- LÓGICA DE SORTEIO ÚNICO ---
-    const salaRef = ref(db, `salas/${sala}`);
-    
-    get(salaRef).then((snapshot) => {
-        const data = snapshot.val();
-        if (!data || !data.elementosDaRodada) {
-            alert("Aguarde o professor gerar a rodada de 24 elementos!");
-            return;
-        }
-
-        // Verifica se já existe um segredo para essa equipe no banco
-        const segredoExistente = (equipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
-
-        if (segredoExistente) {
-            // Se já existe, não faz nada (o onValue vai mostrar automaticamente)
-            console.log("Elemento já sorteado anteriormente. Carregando...");
-        } else {
-            // Se NÃO existe, sorteia o PRIMEIRO elemento agora
-            console.log("Primeiro acesso da equipe. Sorteando elemento inicial...");
-            const lista = data.elementosDaRodada;
-            const idSorteado = lista[Math.floor(Math.random() * lista.length)];
-
-            set(ref(db, `salas/${sala}/elementoSecreto${equipe}`), {
-                id: idSorteado,
-                timestamp: Date.now()
-            });
-        }
-    });
-};
-
-  // --- FUNÇÃO: CONECTAR E OUVIR (PASSIVO) ---
+  // --- 1. CONECTAR À SALA ---
   window.conectarSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Digite o código da sala!");
 
     const salaRef = ref(db, 'salas/' + sala);
     
-onValue(salaRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        // ... (parte da tabela de 24 elementos) ...
+    onValue(salaRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Atualiza a tabela de 24 elementos para todos
+        if (data.elementosDaRodada) atualizarVisualTabela(data.elementosDaRodada);
 
         const painel = document.getElementById('painel-secreto');
         const display = document.getElementById('display-elemento-secreto');
 
-        let segredoData = (minhaEquipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
+        // SÓ MOSTRA O SEGREDO SE O USUÁRIO JÁ TIVER ESCOLHIDO UMA EQUIPE
+        if (minhaEquipe) {
+            let segredoData = (minhaEquipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
 
-        if (segredoData && segredoData.id) {
-            painel.classList.remove('hidden');
-            const nome = nomesEmPortugues[segredoData.id] || "Elemento";
-            display.innerHTML = `#${segredoData.id} ${nome}`;
+            if (segredoData && segredoData.id) {
+                painel.classList.remove('hidden');
+                const nome = nomesEmPortugues[segredoData.id] || "Elemento";
+                display.innerHTML = `#${segredoData.id} ${nome}`;
+            } else {
+                painel.classList.add('hidden');
+            }
         }
-    }
-});
-    document.getElementById('status-sala').innerHTML = `Conectado à sala: <b>${sala}</b> ✅`;
+      }
+    });
+    document.getElementById('status-sala').innerHTML = `Conectado à Sala: <b>${sala}</b> ✅`;
   };
 
-  // --- FUNÇÃO: SORTEAR PARA ADVERSÁRIO (LIMITADO AOS 24) ---
-  window.sortearParaAdversario = (grupoAlvo) => {
+  // --- 2. ESCOLHER EQUIPE E SORTEIO AUTOMÁTICO ---
+  window.definirEquipe = (equipe) => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se a uma sala!");
-
-    const salaRef = ref(db, `salas/${sala}`);
+    if (!sala) return alert("Conecte-se à sala primeiro!");
     
-    // Lê os 24 elementos antes de escolher um
+    minhaEquipe = equipe;
+
+    // Interface: Trava os botões de escolha
+    document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
+    document.getElementById('btn-equipe-b').classList.toggle('hidden', equipe !== 'B');
+    document.getElementById('msg-trava').classList.remove('hidden');
+
+    // Lógica: Verifica se já existe segredo, se não, sorteia o primeiro
+    const salaRef = ref(db, `salas/${sala}`);
     get(salaRef).then((snapshot) => {
         const data = snapshot.val();
-        if (!data || !data.elementosDaRodada) return alert("Gere os 24 elementos antes!");
+        if (!data || !data.elementosDaRodada) return alert("Peça ao professor para gerar os 24 elementos!");
 
-        const lista24 = data.elementosDaRodada;
-        const sorteadoId = lista24[Math.floor(Math.random() * lista24.length)];
+        const segredoJaExiste = (equipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
 
-        set(ref(db, `salas/${sala}/elementoSecreto${grupoAlvo}`), {
-            id: sorteadoId,
-            timestamp: Date.now()
-        }).then(() => alert(`Elemento enviado para o Grupo ${grupoAlvo}!`));
+        if (!segredoJaExiste) {
+            const lista = data.elementosDaRodada;
+            const sorteado = lista[Math.floor(Math.random() * lista.length)];
+            set(ref(db, `salas/${sala}/elementoSecreto${equipe}`), { id: sorteado, ts: Date.now() });
+        }
     });
   };
 
-  // --- FUNÇÃO: GERAR TABELA DE 24 (MANTIDA) ---
+  // --- 3. FUNÇÃO PARA O PROFESSOR SORTEAR NOVO ELEMENTO (PARA QUANDO A RODADA ACABA) ---
+  window.sortearParaAdversario = (grupoAlvo) => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    const salaRef = ref(db, `salas/${sala}`);
+    
+    get(salaRef).then((snapshot) => {
+        const data = snapshot.val();
+        if (!data || !data.elementosDaRodada) return alert("Gere os 24 elementos primeiro!");
+
+        const lista = data.elementosDaRodada;
+        const novoId = lista[Math.floor(Math.random() * lista.length)];
+
+        set(ref(db, `salas/${sala}/elementoSecreto${grupoAlvo}`), { id: novoId, ts: Date.now() })
+        .then(() => alert("Novo elemento secreto gerado para o " + grupoAlvo));
+    });
+  };
+
+  // --- 4. GERAR OS 24 ELEMENTOS (BOTÃO VERDE) ---
   window.sortearElementosParaSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se!");
+
     const categorias = [
       { ids: [3, 11, 19, 37, 55, 87] }, { ids: [4, 12, 20, 38, 56, 88] },
       { ids: [2, 10, 18, 36, 54, 86] }, { ids: [9, 17, 35, 53, 85] }, { ids: [6, 7, 8, 15, 16, 34] }
     ];
     let sorteados = [];
     categorias.forEach(cat => {
-      const embaralhado = cat.ids.sort(() => 0.5 - Math.random());
-      sorteados.push(...embaralhado.slice(0, 3));
+      const emb = cat.ids.sort(() => 0.5 - Math.random());
+      sorteados.push(...emb.slice(0, 3));
     });
     while(sorteados.length < 24) {
-      const num = Math.floor(Math.random() * 118) + 1;
-      if(!sorteados.includes(num)) sorteados.push(num);
+      const n = Math.floor(Math.random() * 118) + 1;
+      if(!sorteados.includes(n)) sorteados.push(n);
     }
-    set(ref(db, `salas/${sala}/elementosDaRodada`), sorteados).then(() => alert("Tabela atualizada!"));
+    
+    // Ao gerar nova rodada de 24, limpamos os segredos antigos para forçar novo sorteio
+    set(ref(db, `salas/${sala}/elementosDaRodada`), sorteados);
+    set(ref(db, `salas/${sala}/elementoSecretoA`), null);
+    set(ref(db, `salas/${sala}/elementoSecretoB`), null);
+    alert("Nova rodada de 24 elementos pronta!");
   };
 
   function atualizarVisualTabela(idsSorteados) {
     document.querySelectorAll('.element').forEach(card => {
         const num = parseInt(card.getAttribute('data-number'));
-        if (idsSorteados.includes(num)) {
-            card.style.opacity = "1"; card.style.filter = "none"; card.style.pointerEvents = "auto";
-        } else {
-            card.style.opacity = "0.15"; card.style.filter = "grayscale(100%)"; card.style.pointerEvents = "none";
-        }
+        const isAceso = idsSorteados.includes(num);
+        card.style.opacity = isAceso ? "1" : "0.15";
+        card.style.filter = isAceso ? "none" : "grayscale(100%)";
+        card.style.pointerEvents = isAceso ? "auto" : "none";
     });
   }
 </script>
