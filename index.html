@@ -643,20 +643,6 @@
     }
   </script> 
 
-Entendi o que aconteceu. O código "atropelou" as etapas: ele está tentando mostrar o segredo antes mesmo de você escolher quem você é no jogo, e a lógica de esconder os botões removeu sua capacidade de gerar novas rodadas.
-
-Para resolver isso de uma vez por todas, vamos organizar o fluxo assim:
-
-Conectar: Apenas entra na sala (não mostra segredo nenhum).
-
-Escolher Equipe: Trava o aluno e, só então, mostra o segredo que já está no banco (ou sorteia o primeiro).
-
-Botão de Nova Rodada: Vamos criar um botão de "Limpar/Nova Rodada" que reseta os segredos sem precisar sair da sala.
-
-Aqui está o código completo para você substituir tudo dentro do seu <script type="module">. Ele está comentado para você entender cada parte:
-
-JavaScript
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
