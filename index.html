@@ -540,47 +540,21 @@
     }
 
 function resetarJogo() {
-    // 1. Limpa os elementos eliminados visualmente
-    const eliminatedElements = document.querySelectorAll('.element.eliminated');
-    eliminatedElements.forEach(el => {
-        el.classList.remove('eliminated');
-    });
-
-    // 2. Fecha o painel de info e limpa a pergunta
-    fecharInfo();
-    document.getElementById("pergunta-gerada").innerText = "";
-    selectedElementNumber = null;
-
-    // 3. Reseta a opacidade de todos os cards
-    const todosOsCards = document.querySelectorAll('.element');
-    todosOsCards.forEach(card => {
-        card.style.opacity = "1";
-        card.style.filter = "none";
-        card.style.pointerEvents = "auto";
-    });
-
-    // 4. VOLTA A INTERFACE AO ESTADO INICIAL
-    // Mostra os botões de equipe novamente
+    // Limpa as eliminações visuais
+    document.querySelectorAll('.element').forEach(el => el.classList.remove('eliminated'));
+    
+    // Volta os botões de escolha
     document.getElementById('btn-equipe-a').classList.remove('hidden');
     document.getElementById('btn-equipe-b').classList.remove('hidden');
-    document.getElementById('btn-equipe-a').innerText = "Entrar no Grupo A";
-    document.getElementById('btn-equipe-b').innerText = "Entrar no Grupo B";
-    document.getElementById('btn-equipe-a').style.backgroundColor = ""; // Reseta cor fixa
-    document.getElementById('btn-equipe-b').style.backgroundColor = ""; 
-    
-    // Esconde a trava e o painel secreto
     document.getElementById('msg-trava').classList.add('hidden');
     document.getElementById('painel-secreto').classList.add('hidden');
     
-    // Mostra os controles de sorteio (caso tenham sido escondidos)
-    document.getElementById('btn-sortear-a').classList.remove('hidden');
-    document.getElementById('btn-sortear-b').classList.remove('hidden');
+    // Esconde botões de sorteio manual
+    document.getElementById('btn-sortear-a').classList.add('hidden');
+    document.getElementById('btn-sortear-b').classList.add('hidden');
 
-    // Reseta a variável global de equipe no módulo
-    // Como estamos em scripts diferentes, a forma mais fácil é recarregar a lógica ou usar window
-    window.minhaEquipe = null;
-
-    alert("Jogo resetado! Você pode escolher sua equipe novamente.");
+    window.minhaEquipe = null; // Reseta a equipe para poder escolher de novo
+    fecharInfo();
 }
 
     carregarElementos(); // Chama a função para carregar elementos ao iniciar a página
@@ -684,7 +658,7 @@ function resetarJogo() {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  window minhaEquipe = null; 
+  window.minhaEquipe = null; 
 
 // --- 1. CONECTAR À SALA COM FEEDBACK ---
 window.conectarSala = () => {
@@ -727,40 +701,36 @@ window.conectarSala = () => {
 // --- 2. DEFINIR EQUIPE COM CORES E TRAVAS ---
 window.definirEquipe = (equipe) => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se a uma sala antes de escolher a equipe!");
+    if (!sala) return alert("Conecte-se à sala primeiro!");
     
-    minhaEquipe = equipe;
+    window.minhaEquipe = equipe; // Define a equipe globalmente
 
-    // Trava Visual: Esconde o botão da outra equipe
+    // Interface: Trava os botões
     document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
     document.getElementById('btn-equipe-b').classList.toggle('hidden', equipe !== 'B');
-    
-    // Esconde o botão de sorteio manual que não pertence a você
-    document.getElementById('btn-sortear-a').classList.toggle('hidden', equipe !== 'A');
-    document.getElementById('btn-sortear-b').classList.toggle('hidden', equipe !== 'B');
-    
+    document.getElementById('btn-sortear-' + equipe.toLowerCase()).classList.remove('hidden');
     document.getElementById('msg-trava').classList.remove('hidden');
 
-    // Ajusta a cor do painel secreto: Azul para A, Rosa para B
     const painel = document.getElementById('painel-secreto');
-    if(equipe === 'A') {
-        painel.style.backgroundColor = "#2563eb"; // Blue-600
-    } else {
-        painel.style.backgroundColor = "#db2777"; // Pink-600
-    }
+    painel.style.backgroundColor = (equipe === 'A') ? "#2563eb" : "#db2777";
 
-    // Verifica se já existe sorteio no banco para não repetir
-    const salaRef = ref(db, `salas/${sala}`);
-    get(salaRef).then((snapshot) => {
-        const data = snapshot.val();
-        if (!data || !data.elementosDaRodada) return alert("Aguarde o professor gerar os 24 elementos!");
-
-        const segredoJaExiste = (equipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
-
-        if (!segredoJaExiste) {
-            const lista = data.elementosDaRodada;
-            const sorteado = lista[Math.floor(Math.random() * lista.length)];
-            set(ref(db, `salas/${sala}/elementoSecreto${equipe}`), { id: sorteado, ts: Date.now() });
+    // LÓGICA DE PROTEÇÃO: Só sorteia se estiver vazio no banco
+    const caminhoSegredo = `salas/${sala}/elementoSecreto${equipe}`;
+    const segredoRef = ref(db, caminhoSegredo);
+    
+    get(segredoRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            console.log("Elemento já definido. Mantendo o original para todos.");
+        } else {
+            get(ref(db, `salas/${sala}/elementosDaRodada`)).then((salaSnapshot) => {
+                const data = salaSnapshot.val();
+                if (data) {
+                    const sorteado = data[Math.floor(Math.random() * data.length)];
+                    set(ref(db, caminhoSegredo), { id: sorteado, ts: Date.now() });
+                } else {
+                    alert("O professor ainda não gerou a rodada!");
+                }
+            });
         }
     });
 };
