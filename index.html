@@ -698,49 +698,11 @@ window.conectarSala = () => {
     statusTxt.classList.add('text-green-600');
 };
 
-// --- 2. DEFINIR EQUIPE COM CORES E TRAVAS ---
 window.definirEquipe = (equipe) => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se à sala primeiro!");
     
-    window.minhaEquipe = equipe; // Define a equipe globalmente
-
-    // Interface: Trava os botões
-    document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
-    document.getElementById('btn-equipe-b').classList.toggle('hidden', equipe !== 'B');
-    document.getElementById('btn-sortear-' + equipe.toLowerCase()).classList.remove('hidden');
-    document.getElementById('msg-trava').classList.remove('hidden');
-
-    const painel = document.getElementById('painel-secreto');
-    painel.style.backgroundColor = (equipe === 'A') ? "#2563eb" : "#db2777";
-
-    // LÓGICA DE PROTEÇÃO: Só sorteia se estiver vazio no banco
-    const caminhoSegredo = `salas/${sala}/elementoSecreto${equipe}`;
-    const segredoRef = ref(db, caminhoSegredo);
-    
-    get(segredoRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            console.log("Elemento já definido. Mantendo o original para todos.");
-        } else {
-            get(ref(db, `salas/${sala}/elementosDaRodada`)).then((salaSnapshot) => {
-                const data = salaSnapshot.val();
-                if (data) {
-                    const sorteado = data[Math.floor(Math.random() * data.length)];
-                    set(ref(db, caminhoSegredo), { id: sorteado, ts: Date.now() });
-                } else {
-                    alert("O professor ainda não gerou a rodada!");
-                }
-            });
-        }
-    });
-};
-
-// --- DEFINIR EQUIPE: SORTEIA APENAS SE A VAGA ESTIVER VAZIA ---
-window.definirEquipe = (equipe) => {
-    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
-    if (!sala) return alert("Conecte-se à sala primeiro!");
-    
-    minhaEquipe = equipe;
+    window.minhaEquipe = equipe; 
 
     // Interface: Trava os botões
     document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
@@ -752,30 +714,15 @@ window.definirEquipe = (equipe) => {
     const painel = document.getElementById('painel-secreto');
     painel.style.backgroundColor = (equipe === 'A') ? "#2563eb" : "#db2777";
 
-    // LÓGICA DE PROTEÇÃO:
+    // Lógica de Sincronia: Só sorteia se o banco estiver vazio
     const caminhoSegredo = `salas/${sala}/elementoSecreto${equipe}`;
-    const segredoRef = ref(db, caminhoSegredo);
-    
-    // 1. Primeiro verificamos se JÁ EXISTE algo lá
-    get(segredoRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            // Se já existe, não fazemos NADA. O onValue cuidará de exibir o que já está lá.
-            console.log("Elemento já definido para esta equipe. Mantendo o original.");
-        } else {
-            // 2. Se estiver vazio, buscamos a lista de 24 para sortear o PRIMEIRO
-            get(ref(db, `salas/${sala}`)).then((salaSnapshot) => {
-                const data = salaSnapshot.val();
-                if (data && data.elementosDaRodada) {
-                    const lista = data.elementosDaRodada;
+    get(ref(db, caminhoSegredo)).then((snapshot) => {
+        if (!snapshot.exists()) {
+            get(ref(db, `salas/${sala}/elementosDaRodada`)).then((s) => {
+                const lista = s.val();
+                if (lista) {
                     const sorteado = lista[Math.floor(Math.random() * lista.length)];
-                    
-                    // Gravamos apenas uma vez
-                    set(ref(db, caminhoSegredo), { 
-                        id: sorteado, 
-                        ts: Date.now() 
-                    });
-                } else {
-                    alert("Aguarde o professor gerar a rodada de 24 elementos!");
+                    set(ref(db, caminhoSegredo), { id: sorteado, ts: Date.now() });
                 }
             });
         }
@@ -799,7 +746,7 @@ window.definirEquipe = (equipe) => {
     });
   };
 
-  // --- 4. GERAR OS 24 ELEMENTOS (BOTÃO VERDE) ---
+// --- 4. GERAR OS 24 ELEMENTOS (BOTÃO VERDE) ---
   window.sortearElementosParaSala = () => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se!");
@@ -818,11 +765,15 @@ window.definirEquipe = (equipe) => {
       if(!sorteados.includes(n)) sorteados.push(n);
     }
     
-    // Ao gerar nova rodada de 24, limpamos os segredos antigos para forçar novo sorteio
-    set(ref(db, `salas/${sala}/elementosDaRodada`), sorteados);
-    set(ref(db, `salas/${sala}/elementoSecretoA`), null);
-    set(ref(db, `salas/${sala}/elementoSecretoB`), null);
-    alert("Nova rodada de 24 elementos pronta!");
+    // CORREÇÃO AQUI: Enviamos um único objeto para a sala. 
+    // Isso garante que a tabela e os segredos resetem EXATAMENTE ao mesmo tempo para todos.
+    set(ref(db, `salas/${sala}`), {
+        elementosDaRodada: sorteados,
+        elementoSecretoA: null,
+        elementoSecretoB: null
+    }).then(() => {
+        alert("Nova rodada de 24 elementos sincronizada para todos!");
+    });
   };
 
   function atualizarVisualTabela(idsSorteados) {
