@@ -740,43 +740,49 @@ window.definirEquipe = (equipe) => {
     });
 };
 
-  // --- 2. ESCOLHER EQUIPE E SORTEIO AUTOMÁTICO ---
+// --- DEFINIR EQUIPE: SORTEIA APENAS SE A VAGA ESTIVER VAZIA ---
 window.definirEquipe = (equipe) => {
     const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
     if (!sala) return alert("Conecte-se à sala primeiro!");
     
     minhaEquipe = equipe;
 
-    // 1. Interface: Trava os botões e ESCONDE o sorteio da equipe adversária
+    // Interface: Trava os botões
     document.getElementById('btn-equipe-a').classList.toggle('hidden', equipe !== 'A');
     document.getElementById('btn-equipe-b').classList.toggle('hidden', equipe !== 'B');
-    
-    // Esconde os botões de sorteio manual para o aluno (ele não deve ver o do adversário)
     document.getElementById('btn-sortear-a').classList.toggle('hidden', equipe !== 'A');
     document.getElementById('btn-sortear-b').classList.toggle('hidden', equipe !== 'B');
-    
-    const msg = document.getElementById('msg-trava');
-    if(msg) msg.classList.remove('hidden');
+    document.getElementById('msg-trava').classList.remove('hidden');
 
-    // 2. Muda a cor do painel secreto baseado na equipe
     const painel = document.getElementById('painel-secreto');
-    if(equipe === 'A') {
-        painel.style.backgroundColor = "#2563eb"; // Azul para A
-    } else {
-        painel.style.backgroundColor = "#db2777"; // Rosa para B
-    }
+    painel.style.backgroundColor = (equipe === 'A') ? "#2563eb" : "#db2777";
 
-    // 3. Sorteio automático (mesma lógica)
-    const salaRef = ref(db, `salas/${sala}`);
-    get(salaRef).then((snapshot) => {
-        const data = snapshot.val();
-        if (!data || !data.elementosDaRodada) return alert("Gere os 24 elementos primeiro!");
-
-        const segredoExiste = (equipe === 'A') ? data.elementoSecretoA : data.elementoSecretoB;
-        if (!segredoExiste) {
-            const lista = data.elementosDaRodada;
-            const sorteado = lista[Math.floor(Math.random() * lista.length)];
-            set(ref(db, `salas/${sala}/elementoSecreto${equipe}`), { id: sorteado, ts: Date.now() });
+    // LÓGICA DE PROTEÇÃO:
+    const caminhoSegredo = `salas/${sala}/elementoSecreto${equipe}`;
+    const segredoRef = ref(db, caminhoSegredo);
+    
+    // 1. Primeiro verificamos se JÁ EXISTE algo lá
+    get(segredoRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            // Se já existe, não fazemos NADA. O onValue cuidará de exibir o que já está lá.
+            console.log("Elemento já definido para esta equipe. Mantendo o original.");
+        } else {
+            // 2. Se estiver vazio, buscamos a lista de 24 para sortear o PRIMEIRO
+            get(ref(db, `salas/${sala}`)).then((salaSnapshot) => {
+                const data = salaSnapshot.val();
+                if (data && data.elementosDaRodada) {
+                    const lista = data.elementosDaRodada;
+                    const sorteado = lista[Math.floor(Math.random() * lista.length)];
+                    
+                    // Gravamos apenas uma vez
+                    set(ref(db, caminhoSegredo), { 
+                        id: sorteado, 
+                        ts: Date.now() 
+                    });
+                } else {
+                    alert("Aguarde o professor gerar a rodada de 24 elementos!");
+                }
+            });
         }
     });
 };
