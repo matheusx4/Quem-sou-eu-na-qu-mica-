@@ -539,23 +539,49 @@
       }
     }
 
-    // Nova função para resetar o jogo
-    function resetarJogo() {
-      const eliminatedElements = document.querySelectorAll('.element.eliminated');
-      eliminatedElements.forEach(el => {
+function resetarJogo() {
+    // 1. Limpa os elementos eliminados visualmente
+    const eliminatedElements = document.querySelectorAll('.element.eliminated');
+    eliminatedElements.forEach(el => {
         el.classList.remove('eliminated');
-      });
-      fecharInfo(); // Garante que o painel de info esteja fechado
-      document.getElementById("pergunta-gerada").innerText = ""; // Limpa a pergunta sugerida
-      selectedElementNumber = null; // Reseta o elemento selecionado
-
-      const todosOsCards = document.querySelectorAll('.element');
-    todosOsCards.forEach(card => {
-      card.style.opacity = "1";
-      card.style.filter = "none";
-      card.style.pointerEvents = "auto";
     });
-    }
+
+    // 2. Fecha o painel de info e limpa a pergunta
+    fecharInfo();
+    document.getElementById("pergunta-gerada").innerText = "";
+    selectedElementNumber = null;
+
+    // 3. Reseta a opacidade de todos os cards
+    const todosOsCards = document.querySelectorAll('.element');
+    todosOsCards.forEach(card => {
+        card.style.opacity = "1";
+        card.style.filter = "none";
+        card.style.pointerEvents = "auto";
+    });
+
+    // 4. VOLTA A INTERFACE AO ESTADO INICIAL
+    // Mostra os botões de equipe novamente
+    document.getElementById('btn-equipe-a').classList.remove('hidden');
+    document.getElementById('btn-equipe-b').classList.remove('hidden');
+    document.getElementById('btn-equipe-a').innerText = "Entrar no Grupo A";
+    document.getElementById('btn-equipe-b').innerText = "Entrar no Grupo B";
+    document.getElementById('btn-equipe-a').style.backgroundColor = ""; // Reseta cor fixa
+    document.getElementById('btn-equipe-b').style.backgroundColor = ""; 
+    
+    // Esconde a trava e o painel secreto
+    document.getElementById('msg-trava').classList.add('hidden');
+    document.getElementById('painel-secreto').classList.add('hidden');
+    
+    // Mostra os controles de sorteio (caso tenham sido escondidos)
+    document.getElementById('btn-sortear-a').classList.remove('hidden');
+    document.getElementById('btn-sortear-b').classList.remove('hidden');
+
+    // Reseta a variável global de equipe no módulo
+    // Como estamos em scripts diferentes, a forma mais fácil é recarregar a lógica ou usar window
+    window.minhaEquipe = null;
+
+    alert("Jogo resetado! Você pode escolher sua equipe novamente.");
+}
 
     carregarElementos(); // Chama a função para carregar elementos ao iniciar a página
 
@@ -658,9 +684,8 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  let minhaEquipe = null; 
+  window minhaEquipe = null; 
 
-  // --- 1. CONECTAR À SALA ---
 // --- 1. CONECTAR À SALA COM FEEDBACK ---
 window.conectarSala = () => {
     const salaInput = document.getElementById('codigo-sala');
