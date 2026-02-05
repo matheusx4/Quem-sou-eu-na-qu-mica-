@@ -427,8 +427,8 @@
 
     let selectedElementNumber = null; // Variável para armazenar o número do elemento selecionado
 
-    // Função showElementInfo atualizada
-    function showElementInfo(name, number, symbol, mass, application, estadoFisico, meltTemp, boilTemp) {
+// Função showElementInfo com o ajuste para o Palpite funcionar
+function showElementInfo(name, number, symbol, mass, application, estadoFisico, meltTemp, boilTemp) {
   const currentSelected = document.querySelector('.element.border-blue-500');
   if (currentSelected) {
     currentSelected.classList.remove('border-blue-500', 'border-4');
@@ -441,14 +441,14 @@
   document.getElementById('element-application').innerText = application;
   document.getElementById('element-state').innerText = estadoFisico;
 
-  // AJUSTE DE VOZ: Avisa ao cego que os detalhes apareceram
+  // AJUSTE DE VOZ: Avisa ao aluno com baixa visão que os detalhes apareceram
   const locutor = document.getElementById('status-voz');
   locutor.innerText = `Detalhes de ${name} exibidos abaixo. Aplicação: ${application}`;
 
   const tempInfo = document.getElementById('element-temp-info');
   if (meltTemp !== null && boilTemp !== null) {
       tempInfo.innerHTML = `(Fusão: ${meltTemp.toFixed(2)} °C, Ebulição: ${boilTemp.toFixed(2)} °C)`;
-  } // ... (restante da sua lógica de temperatura)
+  } 
 
   document.getElementById('info-panel').classList.remove('hidden');
   
@@ -457,7 +457,8 @@
     clickedElement.classList.add('border-blue-500', 'border-4');
   }
   
-  selectedElementNumber = number; 
+  // Isso exporta o número para que o script do Firebase (o Palpite) consiga enxergar
+  window.selectedElementNumber = number; 
 }
 
     // Mapeamento de categorias e números para cores
