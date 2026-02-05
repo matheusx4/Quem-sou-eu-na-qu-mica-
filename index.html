@@ -209,6 +209,11 @@
   <button onclick="eliminarElemento()" aria-label="Confirmar eliminação deste elemento" class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
     Eliminar Elemento
   </button>
+
+  <button onclick="darPalpite()" class="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 active:scale-95 transition-all shadow-lg shadow-green-200">
+      Dar Palpite! 🏆
+    </button>
+  
 </div>
 
     <div class="mt-8 p-4 border rounded bg-gray-100">
@@ -275,7 +280,9 @@
       </div>
     </div>
   </footer>
-
+  
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
   <script>
     const nomesEmPortugues = {
       1: "Hidrogênio", 2: "Hélio", 3: "Lítio", 4: "Berílio", 5: "Boro", 6: "Carbono", 7: "Nitrogênio", 8: "Oxigênio", 9: "Flúor", 10: "Neônio",
@@ -804,6 +811,48 @@ function resetarJogo() {
     });
   };
 
+window.darPalpite = () => {
+    const sala = document.getElementById('codigo-sala').value.trim().toUpperCase();
+    if (!sala || !window.minhaEquipe) {
+        alert("Você precisa entrar em uma sala e escolher uma equipe primeiro!");
+        return;
+    }
+
+    // Descobre quem é o adversário
+    const equipeAdversaria = (window.minhaEquipe === 'A') ? 'B' : 'A';
+    const caminhoAdversario = `salas/${sala}/elementoSecreto${equipeAdversaria}`;
+
+    // Busca o segredo do adversário no Firebase
+    get(ref(db, caminhoAdversario)).then((snapshot) => {
+        const segredo = snapshot.val();
+        if (!segredo) {
+            alert("O adversário ainda não sorteou um elemento!");
+            return;
+        }
+
+        const nomeElemento = document.getElementById('element-name').innerText;
+
+        // Compara o número do elemento aberto (selectedElementNumber) com o segredo
+        if (selectedElementNumber === segredo.id) {
+            const vitoriaMsg = `🎉 VITÓRIA! Você acertou! O elemento secreto da Equipe ${equipeAdversaria} era o ${nomeElemento}!`;
+            alert(vitoriaMsg);
+            anunciarVoz(vitoriaMsg);
+          
+            // DISPARA O CONFETE AQUI:
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#22c55e', '#3b82f6', '#ef4444', '#eab308'] // Cores personalizadas
+          
+        } else {
+            const erroMsg = `❌ ERRADO! O elemento secreto não é o ${nomeElemento}. Perdeu a vez!`;
+            alert(erroMsg);
+            anunciarVoz(erroMsg);
+        }
+    });
+};
+  
   function atualizarVisualTabela(idsSorteados) {
     document.querySelectorAll('.element').forEach(card => {
         const num = parseInt(card.getAttribute('data-number'));
