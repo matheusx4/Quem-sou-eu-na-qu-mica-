@@ -832,25 +832,28 @@ window.darPalpite = () => {
 
         const nomeElemento = document.getElementById('element-name').innerText;
 
-        // Compara o número do elemento aberto (selectedElementNumber) com o segredo
-        if (selectedElementNumber === segredo.id) {
+        // Compara o número do elemento aberto (window.selectedElementNumber) com o segredo
+        if (window.selectedElementNumber === segredo.id) {
             const vitoriaMsg = `🎉 VITÓRIA! Você acertou! O elemento secreto da Equipe ${equipeAdversaria} era o ${nomeElemento}!`;
             alert(vitoriaMsg);
             anunciarVoz(vitoriaMsg);
           
-            // DISPARA O CONFETE AQUI:
-          confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#22c55e', '#3b82f6', '#ef4444', '#eab308'] // Cores personalizadas
+            // DISPARA O CONFETE
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#22c55e', '#3b82f6', '#ef4444', '#eab308']
+            }); // <-- Faltava fechar o parêntese do confetti aqui
           
         } else {
             const erroMsg = `❌ ERRADO! O elemento secreto não é o ${nomeElemento}. Perdeu a vez!`;
             alert(erroMsg);
             anunciarVoz(erroMsg);
         }
-    });
+    }).catch((error) => {
+        console.error("Erro no Firebase:", error);
+    }); // <-- Faltava fechar o parêntese do .then() aqui
 };
   
   function atualizarVisualTabela(idsSorteados) {
