@@ -471,8 +471,23 @@ function toggleAcessibilidade() {
 function anunciarVozNovamente() {
     const nome = document.getElementById('element-name').innerText;
     const app = document.getElementById('element-application').innerText;
-    if (nome && typeof anunciarVoz === 'function') {
-        anunciarVoz(`Revisando dados: ${nome}. Aplicação: ${app}`);
+    
+    if (!nome || nome === "") {
+        const msgErro = "Por favor, selecione um elemento na tabela primeiro.";
+        const utterance = new SpeechSynthesisUtterance(msgErro);
+        window.speechSynthesis.speak(utterance);
+        return;
+    }
+
+    const textoCompleto = `Revisando dados: ${nome}. Aplicação: ${app}`;
+
+    if (typeof anunciarVoz === 'function') {
+        anunciarVoz(textoCompleto);
+    } else {
+        const synth = window.speechSynthesis;
+        const utterThis = new SpeechSynthesisUtterance(textoCompleto);
+        utterThis.lang = 'pt-BR';
+        synth.speak(utterThis);
     }
 }
 
@@ -898,8 +913,7 @@ window.darPalpite = () => {
 </script>
 
 <button onclick="toggleAcessibilidade()" class="fixed bottom-5 right-5 z-[100] bg-blue-600 p-3 rounded-full shadow-lg hover:scale-110 transition-all">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Symbol_accessibility_blue_square.svg" class="w-10 h-10" alt="Acessibilidade">
-    </button>
+<img src="https://upload.wikimedia.org/wikipedia/commons/0/0f/Accessibility_Logo.svg" class="w-10 h-10 invert" alt="Acessibilidade"></button>
 
     <div id="menu-acessibilidade" class="hidden fixed bottom-20 right-5 bg-white p-4 rounded-xl shadow-2xl border-2 border-blue-500 w-64 z-[100]">
         <h3 class="font-bold text-blue-800 mb-3 border-b pb-1">Acessibilidade</h3>
