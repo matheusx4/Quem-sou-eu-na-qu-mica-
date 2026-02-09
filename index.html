@@ -473,13 +473,15 @@ function anunciarVozNovamente() {
     const app = document.getElementById('element-application').innerText;
     
     if (!nome || nome === "") {
-        const msgErro = "Por favor, selecione um elemento na tabela primeiro.";
+        const msgErro = "Por favor, selecione um elemento primeiro.";
         const utterance = new SpeechSynthesisUtterance(msgErro);
+        utterance.lang = 'pt-BR';
         window.speechSynthesis.speak(utterance);
         return;
     }
 
-    const textoCompleto = `Revisando dados: ${nome}. Aplicação: ${app}`;
+    // REMOVIDO "Revisando dados": Agora ele fala direto o nome e aplicação
+    const textoCompleto = `${nome}. Aplicação: ${app}`;
 
     if (typeof anunciarVoz === 'function') {
         anunciarVoz(textoCompleto);
@@ -912,8 +914,9 @@ window.darPalpite = () => {
   }
 </script>
 
-<button onclick="toggleAcessibilidade()" class="fixed bottom-5 right-5 z-[100] bg-blue-600 p-3 rounded-full shadow-lg hover:scale-110 transition-all">
-<img src="https://upload.wikimedia.org/wikipedia/commons/0/0f/Accessibility_Logo.svg" class="w-10 h-10 invert" alt="Acessibilidade"></button>
+<button onclick="toggleAcessibilidade()" class="fixed bottom-5 right-5 z-[100] bg-blue-600 p-3 rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center w-14 h-14">
+    <img src="https://www.svgrepo.com/show/355444/accessibility.svg" class="w-10 h-10 invert" alt="Acessibilidade">
+</button>
 
     <div id="menu-acessibilidade" class="hidden fixed bottom-20 right-5 bg-white p-4 rounded-xl shadow-2xl border-2 border-blue-500 w-64 z-[100]">
         <h3 class="font-bold text-blue-800 mb-3 border-b pb-1">Acessibilidade</h3>
