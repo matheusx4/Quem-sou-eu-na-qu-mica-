@@ -461,6 +461,29 @@ function showElementInfo(name, number, symbol, mass, application, estadoFisico, 
   window.selectedElementNumber = number; 
 }
 
+    let tamanhoFonteAtual = 16;
+
+function toggleAcessibilidade() {
+    const menu = document.getElementById('menu-acessibilidade');
+    menu.classList.toggle('hidden');
+}
+
+function anunciarVozNovamente() {
+    const nome = document.getElementById('element-name').innerText;
+    const app = document.getElementById('element-application').innerText;
+    if (nome && typeof anunciarVoz === 'function') {
+        anunciarVoz(`Revisando dados: ${nome}. Aplicação: ${app}`);
+    }
+}
+
+function mudarFonte(delta) {
+    tamanhoFonteAtual += delta;
+    // Aplica o tamanho apenas nos textos principais para não quebrar a tabela
+    document.querySelectorAll('p, span, h2').forEach(el => {
+        el.style.fontSize = tamanhoFonteAtual + "px";
+    });
+}
+
     // Mapeamento de categorias e números para cores
     const categoryColors = {
       'noble gas': 'bg-blue-500',
@@ -873,6 +896,20 @@ window.darPalpite = () => {
     });
   }
 </script>
-      
+
+<button onclick="toggleAcessibilidade()" class="fixed bottom-5 right-5 z-[100] bg-blue-600 p-3 rounded-full shadow-lg hover:scale-110 transition-all">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Symbol_accessibility_blue_square.svg" class="w-10 h-10" alt="Acessibilidade">
+    </button>
+
+    <div id="menu-acessibilidade" class="hidden fixed bottom-20 right-5 bg-white p-4 rounded-xl shadow-2xl border-2 border-blue-500 w-64 z-[100]">
+        <h3 class="font-bold text-blue-800 mb-3 border-b pb-1">Acessibilidade</h3>
+        <div class="flex flex-col gap-2">
+            <button onclick="anunciarVozNovamente()" class="bg-gray-100 p-2 rounded text-left hover:bg-blue-50 text-sm text-black">🔊 Repetir Narração</button>
+            <button onclick="mudarFonte(2)" class="bg-gray-100 p-2 rounded text-left hover:bg-blue-50 text-sm text-black">➕ Aumentar Texto</button>
+            <button onclick="mudarFonte(-2)" class="bg-gray-100 p-2 rounded text-left hover:bg-blue-50 text-sm text-black">➖ Diminuir Texto</button>
+            <button onclick="window.speechSynthesis.cancel()" class="bg-red-100 text-red-700 p-2 rounded text-left hover:bg-red-200 text-sm">🚫 Parar Voz</button>
+        </div>
+    </div>
+  
 </body>
 </html>
